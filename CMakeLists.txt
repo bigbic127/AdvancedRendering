@@ -117,6 +117,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/public
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer/public
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/
     )
 #assetsCopy
