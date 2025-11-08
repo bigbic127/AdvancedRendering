@@ -13,7 +13,7 @@ struct CameraParameter
 class CameraComponent:public SceneComponent
 {
     public:
-        void Update(); 
+        void Update() override; 
     private:
         glm::mat4 view{1.0f};
         glm::mat4 projection{1.0f};

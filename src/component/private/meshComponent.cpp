@@ -1,4 +1,5 @@
 #include "meshComponent.hpp"
+#include "logger.hpp"
 
 void MeshComponent::Draw()
 {

@@ -23,7 +23,6 @@ class Editor
         ~Editor();
         void Init();
         void Update();
-        void SetContext(Context* c){context = c;}
     private:
         void SetupStyle();
         void CreateLayout();
@@ -36,5 +35,4 @@ class Editor
         int selectedOption = 0;
         NanumSquare nanumSquare;
         bool bInit = false;
-        Context* context;
 };

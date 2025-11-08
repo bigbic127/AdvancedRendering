@@ -298,7 +298,7 @@ void Editor::CreateSceneLayout()
     ImGui::Begin("Scene");
     ImGui::PopStyleVar();
     ImVec2 sceneSize = ImGui::GetContentRegionAvail();
-    ImGui::Image((void*)(intptr_t)context->renderer->GetColorBuffer(), sceneSize, ImVec2(0, 1), ImVec2(1, 0));
+    ImGui::Image((void*)(intptr_t) Context::GetContext()->renderer->GetColorBuffer(), sceneSize, ImVec2(0, 1), ImVec2(1, 0));
     ImGui::End();
 }
 
@@ -316,7 +316,6 @@ void Editor::CreateRightPanel()
         {
             ImGui::EndTabItem();
         }
-
         ImGui::EndTabBar();
     }
     ImGui::End();

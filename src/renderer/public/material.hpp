@@ -1,7 +1,8 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "shader.hpp"
 
-class Texture;
+class ITexture;
 
 struct MaterialParameter
 {
@@ -10,10 +11,10 @@ struct MaterialParameter
     glm::vec3 diffuseColor{1.0f};
     glm::vec3 specularColor{0.5f};
     //texture
-    Texture* diffuseTexture = nullptr;
-    Texture* roughnessTextrue = nullptr;
-    Texture* metallicTexture = nullptr;
-    Texture* normalTexture = nullptr;
+    ITexture* diffuseTexture = nullptr;
+    ITexture* roughnessTextrue = nullptr;
+    ITexture* metallicTexture = nullptr;
+    ITexture* normalTexture = nullptr;
     //properties
     float metallicFactor = 0.0f;
     float roughnessFactor = 0.5f;
@@ -23,10 +24,17 @@ struct MaterialParameter
 
 class IMaterial
 {
-
+    public:
+        virtual ~IMaterial() = default;
+        virtual void Draw() = 0;
 };
 
-class OpenGLMaterial
+class OpenGLMaterial:public IMaterial
 {
+    public:
+        OpenGLMaterial(IShader* s):shader(dynamic_cast<OpenGLShader*>(s)){}
+        void Draw() override;
+    private:
+        OpenGLShader* shader;
 
 };

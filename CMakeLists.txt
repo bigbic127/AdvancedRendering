@@ -119,6 +119,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/public
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer/public
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/public
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/resource/public
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scene/public
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/
     )
@@ -130,4 +131,13 @@ add_custom_target(assetsCopy ALL
             ${assetDir}
             ${assetDir_output}
     COMMENT "Copying assets..."
+)
+#shaderCopy
+set(SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/shader")
+set(SHADER_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>/shader")
+add_custom_target(copy_shaders ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${SHADER_SOURCE_DIR}
+            ${SHADER_OUTPUT_DIR}
+    COMMENT "Copying shaders..."
 )

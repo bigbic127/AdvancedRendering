@@ -18,6 +18,7 @@ class SceneComponent:public IComponent
         void SetScale(glm::vec3 s){transform.scale = s;}
         glm::mat4 GetMatrix();
         void Update() override;
+        void Draw() override;
     protected:
         glm::quat ToQuaternion();
         Transform transform;

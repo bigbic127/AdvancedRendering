@@ -18,3 +18,8 @@ void SceneComponent::Update()
 {
 
 }
+
+void SceneComponent::Draw()
+{
+    
+}
