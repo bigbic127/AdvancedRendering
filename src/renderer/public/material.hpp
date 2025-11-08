@@ -6,9 +6,9 @@ class Texture;
 struct MaterialParameter
 {
     //color
-    glm::vec3 ambientColor = glm::vec3(0.0f);
-    glm::vec3 diffuseColor = glm::vec3(1.0f);
-    glm::vec3 specularColor = glm::vec3(0.5f);
+    glm::vec3 ambientColor{0.0f};
+    glm::vec3 diffuseColor{1.0f};
+    glm::vec3 specularColor{0.5f};
     //texture
     Texture* diffuseTexture = nullptr;
     Texture* roughnessTextrue = nullptr;
