@@ -1,6 +1,6 @@
 #include "mesh.hpp"
 
-OpenGLMesh::OpenGLMesh(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices)
+OpenGLMesh::OpenGLMesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 {
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
