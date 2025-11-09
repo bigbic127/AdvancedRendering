@@ -15,6 +15,7 @@ class Actor
     template<typename T>
         std::vector<T*> GetComponents();
         void Update();
+        void Draw();
     private:
         std::vector<std::unique_ptr<IComponent>> components;
         std::string name;

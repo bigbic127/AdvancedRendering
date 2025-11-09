@@ -17,7 +17,9 @@ ResourceManager::ResourceManager()
     const std::string vsPath = "/shader/standard.vert";
     const std::string fsPath = "/shader/standard.frag";
     auto standardShader = std::make_unique<OpenGLShader>(vsPath, fsPath);
+    IShader* ptrShader = standardShader.get();
     shaders.emplace("standardShader", std::move(standardShader));
     //createMaterial
-    
+    auto standardMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
+    materials.emplace("standardMaterial", std::move(standardMaterial));
 }

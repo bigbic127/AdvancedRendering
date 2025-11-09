@@ -27,40 +27,48 @@ void Application::Init()
     //create Camera
     auto actor = world->CreateActor("Camera Actor");
     auto cameraComponent = actor->AddComponent<CameraComponent>();
-    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 15.0f));
+    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
+    world->SetCurrentCamera(actor);
     //create Light
     actor = world->CreateActor("Light Actor");
     auto lightComponent = actor->AddComponent<LightComponent>();
-    //create Stard Actor;
-    auto it = resourceManager->GetStandardMeshes().find("sphere");
-    if(it != resourceManager->GetStandardMeshes().end())
+    //get standardMaterial
+    auto itMat = resourceManager->GetMaterials().find("standardMaterial");
+    IMaterial* standardMaterial = nullptr;
+    if(itMat != resourceManager->GetMaterials().end())
+    {
+        standardMaterial = itMat->second.get();
+    }
+    //create StardardActor;
+    auto it = resourceManager->GetMeshes().find("sphere");
+    if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("Sphere Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), nullptr);
+        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
     }
-    it = resourceManager->GetStandardMeshes().find("cube");
-    if(it != resourceManager->GetStandardMeshes().end())
+    it = resourceManager->GetMeshes().find("cube");
+    if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("Cube Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), nullptr);
+        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
     }
-    it = resourceManager->GetStandardMeshes().find("cone");
-    if(it != resourceManager->GetStandardMeshes().end())
+    it = resourceManager->GetMeshes().find("cone");
+    if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("Cone Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), nullptr);
+        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
     }
-    it = resourceManager->GetStandardMeshes().find("cylinder");
-    if(it != resourceManager->GetStandardMeshes().end())
+    it = resourceManager->GetMeshes().find("cylinder");
+    if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("Cylinder Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), nullptr);
+        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
     }
-    it = resourceManager->GetStandardMeshes().find("plane");
-    if(it != resourceManager->GetStandardMeshes().end())
+    it = resourceManager->GetMeshes().find("plane");
+    if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("plane Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), nullptr);
+        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
     }
     Loop();
 }
@@ -69,8 +77,9 @@ void Application::Loop()
 {
     while(!window.ShouldClose())
     {
-        renderer->Draw();
         world->Update();
+        renderer->Update();
+        renderer->Draw();
         window.Update();
     }
     

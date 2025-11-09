@@ -24,11 +24,6 @@ void World::Update()
     float currentFrame = static_cast<float>(glfwGetTime());
     deletaTime = currentFrame - lastTime;
     lastTime = deletaTime;
-    for(auto& actor:actors)
-    {
-        actor->Update();
-    }
-
 }
 
 float World::deletaTime = 0.0f;

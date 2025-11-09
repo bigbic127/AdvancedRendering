@@ -34,7 +34,8 @@ class OpenGLMaterial:public IMaterial
     public:
         OpenGLMaterial(IShader* s):shader(dynamic_cast<OpenGLShader*>(s)){}
         void Draw() override;
+        OpenGLShader* GetShader()const{return shader;}
     private:
         OpenGLShader* shader;
-
+        MaterialParameter parameter;
 };

@@ -13,6 +13,9 @@ struct CameraParameter
 class CameraComponent:public SceneComponent
 {
     public:
+        glm::mat4 GetViewMatrix() const{return view;}
+        glm::mat4 GetProjectionMatrix() const{return projection;}
+        const CameraParameter& GetCameraParameter() const{return cameraParameter;}
         void Update() override; 
     private:
         glm::mat4 view{1.0f};

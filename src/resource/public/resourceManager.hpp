@@ -11,7 +11,8 @@ class ResourceManager
 {
     public:
         ResourceManager();
-        const std::map<std::string, std::unique_ptr<IMesh>>& GetStandardMeshes()const{return meshes;}
+        const std::map<std::string, std::unique_ptr<IMesh>>& GetMeshes()const{return meshes;}
+        const std::map<std::string, std::unique_ptr<IMaterial>>& GetMaterials()const{return materials;}
     private:
         std::map<std::string, std::unique_ptr<IMesh>> meshes;
         std::map<std::string, std::unique_ptr<IShader>> shaders;
