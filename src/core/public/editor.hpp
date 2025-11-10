@@ -32,7 +32,8 @@ class Editor
         void CreateSceneLayout();
         void CreateRightPanel();
     private:
-        int selectedOption = 0;
+        int selectedDisplay = 0;
+        int selectedShape = 0;
         NanumSquare nanumSquare;
         bool bInit = false;
 };

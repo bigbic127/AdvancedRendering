@@ -2,7 +2,6 @@
 #include "glad/glad.h"
 #include "context.hpp"
 #include "world.hpp"
-#include "actor.hpp"
 
 OpenGLRenderer::OpenGLRenderer()
 {
@@ -25,6 +24,8 @@ OpenGLRenderer::~OpenGLRenderer()
 
 void OpenGLRenderer::CreateBuffer(int width, int height)
 {
+    this->width = width;
+    this->height = height;
     //G-buffer
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -49,7 +50,7 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
 
 void OpenGLRenderer::ResizeBuffer(int width, int height)
 {
-    if(width<=0 || height <=0) return;
+    if(width == this->width && height == this->height) return;
     glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &rbo);
     glDeleteTextures(1, &cbo);

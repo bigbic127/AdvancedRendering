@@ -13,9 +13,12 @@ struct Transform
 class SceneComponent:public IComponent
 {
     public:
+        void SetTransform(Transform transform){this->transform = transform;}
         void SetPosition(glm::vec3 p){transform.position = p;}
         void SetRotation(glm::vec3 r){transform.rotation = r;}
         void SetScale(glm::vec3 s){transform.scale = s;}
+        const Transform& GetTransform()const{return transform;}
+        glm::vec3 GetDirection()const;
         glm::mat4 GetMatrix();
         void Update() override;
         void Draw() override;

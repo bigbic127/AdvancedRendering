@@ -27,11 +27,12 @@ void Application::Init()
     //create Camera
     auto actor = world->CreateActor("Camera Actor");
     auto cameraComponent = actor->AddComponent<CameraComponent>();
-    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
+    cameraComponent->SetPosition(glm::vec3(0.0f, 4.0f, 10.0f));
     world->SetCurrentCamera(actor);
     //create Light
     actor = world->CreateActor("Light Actor");
-    auto lightComponent = actor->AddComponent<LightComponent>();
+    auto lightComponent = actor->AddComponent<DirectionalLightComponent>();
+    world->SetLightActor(actor);
     //get standardMaterial
     auto itMat = resourceManager->GetMaterials().find("standardMaterial");
     IMaterial* standardMaterial = nullptr;
@@ -43,31 +44,16 @@ void Application::Init()
     auto it = resourceManager->GetMeshes().find("sphere");
     if(it != resourceManager->GetMeshes().end())
     {
-        auto actor = world->CreateActor("Sphere Actor");
+        auto actor = world->CreateActor("Mesh Actor");
         actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
-    }
-    it = resourceManager->GetMeshes().find("cube");
-    if(it != resourceManager->GetMeshes().end())
-    {
-        auto actor = world->CreateActor("Cube Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
-    }
-    it = resourceManager->GetMeshes().find("cone");
-    if(it != resourceManager->GetMeshes().end())
-    {
-        auto actor = world->CreateActor("Cone Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
-    }
-    it = resourceManager->GetMeshes().find("cylinder");
-    if(it != resourceManager->GetMeshes().end())
-    {
-        auto actor = world->CreateActor("Cylinder Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
+        actor->GetComponent<MeshComponent>()->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+        actor->GetComponent<MeshComponent>()->SetScale(glm::vec3(2.0f));
+        world->SetSelectedActor(actor);
     }
     it = resourceManager->GetMeshes().find("plane");
     if(it != resourceManager->GetMeshes().end())
     {
-        auto actor = world->CreateActor("plane Actor");
+        auto actor = world->CreateActor("Plane Actor");
         actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
     }
     Loop();

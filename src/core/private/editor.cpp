@@ -201,33 +201,68 @@ void Editor::CreateMainMenuBar()
         {
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::PushFont(nanumSquare.reqular, 13.0f);
-            ImGui::SeparatorText("Display");
+            ImGui::SeparatorText("화면");
             ImGui::PopFont();
             ImGui::PopStyleColor();
 
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Sphere", &selectedOption, 0);
+            ImGui::RadioButton("라이팅포함", &selectedDisplay, 0);
+            ImGui::SameLine(160.0f, 0.0f);
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::Text("1");
+            ImGui::PopStyleColor();
+
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::RadioButton("언릿", &selectedDisplay, 1);
+            ImGui::SameLine(160.0f, 0.0f);
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::Text("2");
+            ImGui::PopStyleColor();
+
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::RadioButton("와이어프레임", &selectedDisplay, 2);
+            ImGui::SameLine(160.0f, 0.0f);
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::Text("3");
+            ImGui::PopStyleColor();
+
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::RadioButton("라이팅", &selectedDisplay, 3);
+            ImGui::SameLine(160.0f, 0.0f);
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::Text("4");
+            ImGui::PopStyleColor();
+
+            //Shape
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::PushFont(nanumSquare.reqular, 13.0f);
+            ImGui::SeparatorText("Shape");
+            ImGui::PopFont();
+            ImGui::PopStyleColor();
+
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::RadioButton("Sphere", &selectedShape, 0);
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 1");
             ImGui::PopStyleColor();
             
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Cube", &selectedOption, 1);
+            ImGui::RadioButton("Cube", &selectedShape, 1);
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 2");
             ImGui::PopStyleColor();
 
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Cylinder", &selectedOption, 2);
+            ImGui::RadioButton("Cylinder", &selectedShape, 2);
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 3");
             ImGui::PopStyleColor();
 
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Plane", &selectedOption, 3);
+            ImGui::RadioButton("Plane", &selectedShape, 3);
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 4");
@@ -298,6 +333,8 @@ void Editor::CreateSceneLayout()
     ImGui::Begin("Scene");
     ImGui::PopStyleVar();
     ImVec2 sceneSize = ImGui::GetContentRegionAvail();
+    if (sceneSize.x>0 && sceneSize.y>0)
+        Context::GetContext()->renderer->ResizeBuffer((int)sceneSize.x, (int)sceneSize.y);
     ImGui::Image((void*)(intptr_t) Context::GetContext()->renderer->GetColorBuffer(), sceneSize, ImVec2(0, 1), ImVec2(1, 0));
     ImGui::End();
 }

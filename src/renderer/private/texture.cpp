@@ -10,3 +10,13 @@ OpenGLTexture::~OpenGLTexture()
 {
     glDeleteTextures(1, &textureID);   
 }
+
+void OpenGLTexture::Bind()
+{
+    glBindTexture(GL_TEXTURE_2D, textureID);
+}
+
+void OpenGLTexture::UnBind()
+{
+    glBindTexture(GL_TEXTURE_2D, 0);
+}

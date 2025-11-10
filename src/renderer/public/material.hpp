@@ -3,12 +3,13 @@
 #include "shader.hpp"
 
 class ITexture;
+class MeshComponent;
 
 struct MaterialParameter
 {
     //color
     glm::vec3 ambientColor{0.0f};
-    glm::vec3 diffuseColor{1.0f};
+    glm::vec3 diffuseColor{0.77f};
     glm::vec3 specularColor{0.5f};
     //texture
     ITexture* diffuseTexture = nullptr;
@@ -26,14 +27,17 @@ class IMaterial
 {
     public:
         virtual ~IMaterial() = default;
-        virtual void Draw() = 0;
+        virtual void Bind() = 0;
+        virtual void UnBind() = 0 ;
 };
 
 class OpenGLMaterial:public IMaterial
 {
     public:
         OpenGLMaterial(IShader* s):shader(dynamic_cast<OpenGLShader*>(s)){}
-        void Draw() override;
+        void Bind() override;
+        void Draw(MeshComponent* component);
+        void UnBind() override;
         OpenGLShader* GetShader()const{return shader;}
     private:
         OpenGLShader* shader;

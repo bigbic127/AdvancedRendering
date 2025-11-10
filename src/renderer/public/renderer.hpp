@@ -10,6 +10,7 @@ class IRenderer
         virtual unsigned int& GetColorBuffer() = 0;
         virtual void CreateBuffer(int width, int height) = 0;
         virtual void ResizeBuffer(int width, int height) = 0;
+        virtual float GetAspect()const = 0;
 };
 
 class OpenGLRenderer:public IRenderer
@@ -22,8 +23,9 @@ class OpenGLRenderer:public IRenderer
         void Update() override;
         unsigned int& GetColorBuffer() override{return cbo;}
         void ResizeBuffer(int w, int h);
+        float GetAspect()const{return float(width)/height;}
     private:
         void CreateBuffer(int width, int height);
         unsigned int fbo, rbo, cbo;
-
+        int width, height;
 };
