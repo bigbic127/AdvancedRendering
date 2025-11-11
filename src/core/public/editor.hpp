@@ -31,6 +31,7 @@ class Editor
         void CreateDockSpace();
         void CreateSceneLayout();
         void CreateRightPanel();
+        void CreateStatus();
     private:
         int selectedDisplay = 0;
         int selectedShape = 0;

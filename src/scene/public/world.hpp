@@ -13,16 +13,16 @@ class World
         const std::vector<std::unique_ptr<Actor>>& GetActors() const{return actors;}
         void SetCurrentCamera(Actor* camera){currentCamera = camera;}
         Actor* GetCurrentCamera()const{return currentCamera;}
-        void SetLightActor(Actor* light){lightActors.push_back(light);}
-        std::vector<Actor*> GetLightActors() const{return lightActors;}
-        void SetSelectedActor(Actor* actor){selectedActor = actor;}
-        Actor* GetSelectedActor()const{return selectedActor;}
+        void SetCurrentLight(Actor* light){currentLight = light;}
+        Actor* GetCurrentLight() const{return currentLight;}
+        void SetSelectedActor(Actor* actor){currentSelectedActor = actor;}
+        Actor* GetSelectedActor()const{return currentSelectedActor;}
         void Update();
     private:
         std::vector<std::unique_ptr<Actor>> actors;
-        std::vector<Actor*> lightActors;
+        Actor* currentLight;
         Actor* currentCamera;
-        Actor* selectedActor;
+        Actor* currentSelectedActor;
         static float deletaTime;
         float lastTime = 0.0f;
 };

@@ -14,6 +14,7 @@ class Window
         GLFWwindow* GetWindow()const{return window;}
         Editor* GetEditor(){return &editor;}
     private:
+        static void WindowResizeCallback(GLFWwindow* window, int w, int h);
         GLFWwindow* window;
         int width, height;
         Editor editor;

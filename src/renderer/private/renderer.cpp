@@ -63,6 +63,11 @@ void OpenGLRenderer::Clear()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void OpenGLRenderer::Begin()
+{
+    
+}
+
 void OpenGLRenderer::Draw()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);

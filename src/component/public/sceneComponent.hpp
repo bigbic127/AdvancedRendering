@@ -1,6 +1,7 @@
 #pragma once
 #include "component.hpp"
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 struct Transform
@@ -18,6 +19,7 @@ class SceneComponent:public IComponent
         void SetRotation(glm::vec3 r){transform.rotation = r;}
         void SetScale(glm::vec3 s){transform.scale = s;}
         const Transform& GetTransform()const{return transform;}
+        float* GetRotation(){return glm::value_ptr(transform.rotation);}
         glm::vec3 GetDirection()const;
         glm::mat4 GetMatrix();
         void Update() override;

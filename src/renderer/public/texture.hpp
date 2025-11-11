@@ -14,7 +14,7 @@ class OpenGLTexture:public ITexture
     public:
         OpenGLTexture(const std::string& path);
         OpenGLTexture(const unsigned char* data, unsigned int size);//png,jpg
-        OpenGLTexture(const unsigned char* data, unsigned int width, unsigned int height);//row
+        OpenGLTexture(const unsigned char* data, unsigned int width, unsigned int height, int channel = 0);//row
         ~OpenGLTexture();
         void Bind() override;
         void UnBind() override;

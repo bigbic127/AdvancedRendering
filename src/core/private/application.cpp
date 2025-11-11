@@ -27,18 +27,24 @@ void Application::Init()
     //create Camera
     auto actor = world->CreateActor("Camera Actor");
     auto cameraComponent = actor->AddComponent<CameraComponent>();
-    cameraComponent->SetPosition(glm::vec3(0.0f, 4.0f, 10.0f));
+    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
     world->SetCurrentCamera(actor);
     //create Light
     actor = world->CreateActor("Light Actor");
     auto lightComponent = actor->AddComponent<DirectionalLightComponent>();
-    world->SetLightActor(actor);
+    world->SetCurrentLight(actor);
     //get standardMaterial
     auto itMat = resourceManager->GetMaterials().find("standardMaterial");
     IMaterial* standardMaterial = nullptr;
     if(itMat != resourceManager->GetMaterials().end())
     {
         standardMaterial = itMat->second.get();
+    }
+    itMat = resourceManager->GetMaterials().find("planeMaterial");
+    IMaterial* planeMaterial = nullptr;
+    if(itMat != resourceManager->GetMaterials().end())
+    {
+        planeMaterial = itMat->second.get();
     }
     //create StardardActor;
     auto it = resourceManager->GetMeshes().find("sphere");
@@ -54,7 +60,7 @@ void Application::Init()
     if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("Plane Actor");
-        actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
+        actor->AddComponent<MeshComponent>(it->second.get(), planeMaterial);
     }
     Loop();
 }

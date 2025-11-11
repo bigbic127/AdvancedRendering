@@ -1,4 +1,5 @@
 #include "window.hpp"
+#include "logger.hpp"
 
 Window::~Window()
 {
@@ -27,12 +28,21 @@ bool Window::Init()
     }
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
+    glfwSetErrorCallback(Logger::WindowErrorCallback);
+    glfwSetWindowSizeCallback(window, Window::WindowResizeCallback);
     if(!gladLoadGLLoader(GLADloadproc(glfwGetProcAddress)))
         return false;
     glfwSwapInterval(1);
     //editor
     editor.Init();
     return true;
+}
+
+void Window::WindowResizeCallback(GLFWwindow* window, int w, int h)
+{
+    Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    win->width = w;
+    win->height = h;
 }
 
 bool Window::ShouldClose()

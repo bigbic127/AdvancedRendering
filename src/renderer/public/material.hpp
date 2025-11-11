@@ -5,6 +5,11 @@
 class ITexture;
 class MeshComponent;
 
+enum MaterialType
+{
+    Plastic
+};
+
 struct MaterialParameter
 {
     //color
@@ -34,11 +39,13 @@ class IMaterial
 class OpenGLMaterial:public IMaterial
 {
     public:
-        OpenGLMaterial(IShader* s):shader(dynamic_cast<OpenGLShader*>(s)){}
+        OpenGLMaterial(IShader* s):shader(static_cast<OpenGLShader*>(s)){}
         void Bind() override;
         void Draw(MeshComponent* component);
         void UnBind() override;
+        void AddTexture(ITexture* texture, int type);
         OpenGLShader* GetShader()const{return shader;}
+        MaterialParameter* GetParameter(){return &parameter;}
     private:
         OpenGLShader* shader;
         MaterialParameter parameter;

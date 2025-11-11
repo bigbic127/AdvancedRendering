@@ -6,6 +6,8 @@
 #include <imgui_impl_opengl3.h>
 #include <string>
 #include "context.hpp"
+#include "world.hpp"
+#include "lightComponent.hpp"
 #include "renderer.hpp"
 
 Editor::~Editor()
@@ -67,6 +69,7 @@ void Editor::Update()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     CreateLayout();
+    ImGui::ShowDemoWindow();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     ImGuiIO& io = ImGui::GetIO();
@@ -201,7 +204,7 @@ void Editor::CreateMainMenuBar()
         {
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::PushFont(nanumSquare.reqular, 13.0f);
-            ImGui::SeparatorText("화면");
+            ImGui::SeparatorText("Display");
             ImGui::PopFont();
             ImGui::PopStyleColor();
 
@@ -351,10 +354,42 @@ void Editor::CreateRightPanel()
     {
         if(ImGui::BeginTabItem("Propertices"))
         {
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::PushFont(nanumSquare.reqular, 13.0f);
+            ImGui::SeparatorText("Light");
+            ImGui::PopFont();
+            ImGui::PopStyleColor();
+
+            LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::Text("Rotation");
+            ImGui::SameLine(120.0f, 0.0f);
+            ImGui::DragFloat3("##rotationfoat3", lightComponent->GetRotation(), 1.0f, -360.0f, 360.0f);
+            ImGui::Separator();
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::Text("Intensity");
+            ImGui::SameLine(120.0f, 0.0f);
+            ImGui::DragFloat("##intensityfloat", lightComponent->GetIntensity(), 0.01f, 0.0f, 150.0f);
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::Text("Color");
+            ImGui::SameLine(120.0f, 0.0f);
+            ImGui::ColorEdit3("##colorpick", lightComponent->GetColor());
+            ImGui::SetCursorPosX(20.0f);
+            ImGui::Text("HDRI");
+
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+            ImGui::PushFont(nanumSquare.reqular, 13.0f);
+            ImGui::SeparatorText("Material");
+            ImGui::PopFont();
+            ImGui::PopStyleColor();
+
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
     }
     ImGui::End();
+}
 
+void Editor::CreateStatus()
+{
 }

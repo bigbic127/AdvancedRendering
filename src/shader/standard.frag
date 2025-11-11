@@ -46,7 +46,7 @@ void main()
         diffuseTextureColor = vec3(texture(diffuseTexture, fragTexcoord).rgb);
     vec3 ambient =  lightColor * ambientColor * diffuseColor * diffuseTextureColor;
     vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor * diffuseTextureColor;
-    vec3 specular = reflectValue * lightColor * specularColor;
+    vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
     vec3 result = ambient + diffuse + specular;
 
     FragColor = vec4(result, 1.0f);

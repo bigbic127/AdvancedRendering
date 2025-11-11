@@ -13,13 +13,25 @@ ResourceManager::ResourceManager()
     meshes.emplace("cone", std::move(coneMesh));
     meshes.emplace("cylinder", std::move(cylinderMesh));
     meshes.emplace("plane", std::move(planeMesh));
+    //create texture
+    const std::string texPath = "/textures/mercury.jpg";
+    auto mercuryTexture = std::make_unique<OpenGLTexture>(texPath);
+    ITexture* ptrTexture = mercuryTexture.get();
+    textures.emplace("mercury", std::move(mercuryTexture));
     //create shader
     const std::string vsPath = "/shader/standard.vert";
     const std::string fsPath = "/shader/standard.frag";
     auto standardShader = std::make_unique<OpenGLShader>(vsPath, fsPath);
     IShader* ptrShader = standardShader.get();
     shaders.emplace("standardShader", std::move(standardShader));
-    //createMaterial
+    //create material
     auto standardMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
+    IMaterial* ptrMaterial = standardMaterial.get();
     materials.emplace("standardMaterial", std::move(standardMaterial));
+    OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(ptrMaterial);
+    mat->AddTexture(ptrTexture, 1);
+    //create planeMaterial
+    auto planeMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
+    ptrMaterial = planeMaterial.get();
+    materials.emplace("planeMaterial", std::move(planeMaterial));
 }

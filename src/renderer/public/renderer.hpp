@@ -5,6 +5,7 @@ class IRenderer
     public:
         virtual ~IRenderer() = default;
         virtual void Clear() = 0;
+        virtual void Begin() = 0;
         virtual void Draw() = 0;
         virtual void Update() = 0;
         virtual unsigned int& GetColorBuffer() = 0;
@@ -19,6 +20,7 @@ class OpenGLRenderer:public IRenderer
         OpenGLRenderer();
         ~OpenGLRenderer();
         void Clear() override;
+        void Begin() override;
         void Draw() override;
         void Update() override;
         unsigned int& GetColorBuffer() override{return cbo;}
