@@ -1,4 +1,5 @@
 #include "folderPath.hpp"
+#include "glad/glad.h"
 #include "editor.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -9,6 +10,8 @@
 #include "world.hpp"
 #include "lightComponent.hpp"
 #include "renderer.hpp"
+#include "material.hpp"
+#include "meshComponent.hpp"
 
 Editor::~Editor()
 {
@@ -352,36 +355,80 @@ void Editor::CreateRightPanel()
     ImGui::PopStyleColor();
     if(ImGui::BeginTabBar("RightTabs"))
     {
-        if(ImGui::BeginTabItem("Propertices"))
+        if(ImGui::BeginTabItem("디테일"))
         {
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
-            ImGui::PushFont(nanumSquare.reqular, 13.0f);
-            ImGui::SeparatorText("Light");
-            ImGui::PopFont();
-            ImGui::PopStyleColor();
+            //ImGuiViewport* viewport = ImGui::GetMainViewport();
+            //ImVec2 pos = viewport->WorkPos;
+            //pos.y += 5.0f;
+            //ImGui::SetCursorPosY(pos.y);
+            if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("transform");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
 
-            LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
-            ImGui::SetCursorPosX(20.0f);
-            ImGui::Text("Rotation");
-            ImGui::SameLine(120.0f, 0.0f);
-            ImGui::DragFloat3("##rotationfoat3", lightComponent->GetRotation(), 1.0f, -360.0f, 360.0f);
-            ImGui::Separator();
-            ImGui::SetCursorPosX(20.0f);
-            ImGui::Text("Intensity");
-            ImGui::SameLine(120.0f, 0.0f);
-            ImGui::DragFloat("##intensityfloat", lightComponent->GetIntensity(), 0.01f, 0.0f, 150.0f);
-            ImGui::SetCursorPosX(20.0f);
-            ImGui::Text("Color");
-            ImGui::SameLine(120.0f, 0.0f);
-            ImGui::ColorEdit3("##colorpick", lightComponent->GetColor());
-            ImGui::SetCursorPosX(20.0f);
-            ImGui::Text("HDRI");
+                LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Rotation");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat3("##rotationfoat3", lightComponent->GetRotation(), 1.0f, -360.0f, 360.0f);
+                ImGui::Separator();
 
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
-            ImGui::PushFont(nanumSquare.reqular, 13.0f);
-            ImGui::SeparatorText("Material");
-            ImGui::PopFont();
-            ImGui::PopStyleColor();
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("propertices");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Intensity");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat("##intensityfloat", lightComponent->GetIntensity(), 0.01f, 0.0f, 150.0f);
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Color");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ColorEdit3("##colorpick", lightComponent->GetColor());
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("HDRI");
+                ImGui::Separator();
+            }
+            if (ImGui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("propertices");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+
+                OpenGLRenderer* renderer = static_cast<OpenGLRenderer*>(Context::GetContext()->renderer);
+                IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
+                MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
+                ImGui::SetCursorPosX(20.0f);                
+                ImGui::Checkbox("Stencil", renderer->GetStencil());
+                ImGui::SameLine();
+                if(*renderer->GetStencil())
+                    ImGui::SliderFloat("##stencilOutline", &parameter->stencilOutline, 0.01f, 1.0f);
+                else
+                {
+                    ImGui::BeginDisabled();
+                    ImGui::SliderFloat("##stencilOutline", &parameter->stencilOutline, 0.01f, 1.0f);
+                    ImGui::EndDisabled();
+                }
+                ImGui::Separator();
+            }
+            if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("propertices");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+                
+                ImGui::Separator();
+            }
+
 
             ImGui::EndTabItem();
         }

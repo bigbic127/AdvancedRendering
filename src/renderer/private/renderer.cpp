@@ -2,16 +2,24 @@
 #include "glad/glad.h"
 #include "context.hpp"
 #include "world.hpp"
+#include "resourceManager.hpp"
+#include "material.hpp"
+#include "meshComponent.hpp"
 
 OpenGLRenderer::OpenGLRenderer()
 {
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_BLEND);
     CreateBuffer(800, 600);
 }
 
@@ -60,7 +68,7 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
 void OpenGLRenderer::Clear()
 {
     glClearColor(0.7f,0.7f,0.7f,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void OpenGLRenderer::Begin()
@@ -74,7 +82,34 @@ void OpenGLRenderer::Draw()
     Clear();
     for(auto& actor:Context::GetContext()->world->GetActors())
     {
+        if(actor.get() == Context::GetContext()->world->GetSelectedActor())
+        {
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+            actor->Draw();//sphere
+        }
+        else
+        {
+            glStencilMask(0x00);
+            actor->Draw();//plane
+        }
+    }
+    //stencilRender
+    if (Context::GetContext()->world->GetSelectedActor() != nullptr && bStencil)
+    {
+        auto actor = Context::GetContext()->world->GetSelectedActor();
+        MeshComponent* meshComponent = actor->GetComponent<MeshComponent>();
+        OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
+        MaterialParameter* parameter =  material->GetParameter();
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        parameter->bStencil = true;
         actor->Draw();
+        parameter->bStencil = false;
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

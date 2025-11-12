@@ -28,6 +28,9 @@ void OpenGLMaterial::Draw(MeshComponent* component)
         shader->SetBool("bDiffuse", true);
         parameter.diffuseTexture->Bind();
     }
+    shader->SetBool("bStencil",parameter.bStencil);
+    shader->SetVector3("stencilColor",parameter.stencilColor);
+    shader->SetFloat("stencilOutline",parameter.stencilOutline);
 }
 
 void OpenGLMaterial::UnBind()

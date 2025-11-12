@@ -6,7 +6,7 @@
 class Window
 {
     public:
-        Window(int w= 800, int h= 600):width(w),height(h){}
+        Window(int w= 1280, int h= 720):width(w),height(h){}
         ~Window();
         bool Init();
         bool ShouldClose();

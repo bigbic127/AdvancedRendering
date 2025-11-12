@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec3 fragPosition;
 in vec3 fragNormal;
 in vec2 fragTexcoord;
+
 //color
 uniform vec3 ambientColor = vec3(0.0f);
 uniform vec3 diffuseColor = vec3(1.0f);
@@ -29,6 +30,18 @@ uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
 uniform vec3 directionalLight = vec3(0.0f, 1.0f, 0.0f);
 //camera
 uniform vec3 cameraPosition;
+uniform float near = 0.1; 
+uniform float far  = 100.0; 
+uniform bool bDepth = false;
+//stencil
+uniform vec3 stencilColor = vec3(0.1f, 1.0f, 0.05f);
+uniform bool bStencil = false;
+
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
 
 void main()
 {
@@ -42,12 +55,23 @@ void main()
     float reflectValue = pow(max(dot(specularDir, reflectDir),0.0f), specularShininess);
     //diffuse
     vec3 diffuseTextureColor = vec3(1.0f, 1.0f, 1.0f);
+    float alpha = 1.0f;
     if(bDiffuse)
-        diffuseTextureColor = vec3(texture(diffuseTexture, fragTexcoord).rgb);
+    {
+        vec4 texture = texture(diffuseTexture, fragTexcoord);
+        diffuseTextureColor = vec3(texture.rgb);
+        alpha = alpha;
+    }
     vec3 ambient =  lightColor * ambientColor * diffuseColor * diffuseTextureColor;
     vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor * diffuseTextureColor;
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
     vec3 result = ambient + diffuse + specular;
-
-    FragColor = vec4(result, 1.0f);
+    FragColor = vec4(result, alpha);
+    if(bDepth)
+    {
+        float depth = LinearizeDepth(gl_FragCoord.z) / far;
+        FragColor = vec4(vec3(depth), 1.0f);
+    }
+    if(bStencil)
+         FragColor = vec4(stencilColor, 1.0f);
 }

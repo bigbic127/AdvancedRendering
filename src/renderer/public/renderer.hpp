@@ -26,8 +26,10 @@ class OpenGLRenderer:public IRenderer
         unsigned int& GetColorBuffer() override{return cbo;}
         void ResizeBuffer(int w, int h);
         float GetAspect()const{return float(width)/height;}
+        bool* GetStencil(){return &bStencil;}
     private:
         void CreateBuffer(int width, int height);
         unsigned int fbo, rbo, cbo;
         int width, height;
+        bool bStencil = false;
 };

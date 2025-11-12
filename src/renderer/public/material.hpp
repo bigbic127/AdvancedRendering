@@ -26,6 +26,10 @@ struct MaterialParameter
     float roughnessFactor = 0.5f;
     float shininess = 0.5f;
     float specularShininess = 32.0f;
+    //stencil
+    bool bStencil = false;
+    glm::vec3 stencilColor{0.1f, 1.0f, 0.05f};
+    float stencilOutline = 0.1f;
 };
 
 class IMaterial
