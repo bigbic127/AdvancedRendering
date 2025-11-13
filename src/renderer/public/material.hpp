@@ -7,11 +7,14 @@ class MeshComponent;
 
 enum MaterialType
 {
-    Plastic
+    Plastic = 0,
+    Transparent = 1
 };
 
 struct MaterialParameter
 {
+    //type
+    MaterialType type = MaterialType::Plastic;
     //color
     glm::vec3 ambientColor{0.0f};
     glm::vec3 diffuseColor{0.77f};

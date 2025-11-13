@@ -37,6 +37,10 @@ uniform bool bDepth = false;
 uniform vec3 stencilColor = vec3(0.1f, 1.0f, 0.05f);
 uniform bool bStencil = false;
 
+//type
+// 0:Plastic 1:Transparent
+uniform int type = 0;
+
 float LinearizeDepth(float depth) 
 {
     float z = depth * 2.0 - 1.0;
@@ -60,12 +64,22 @@ void main()
     {
         vec4 texture = texture(diffuseTexture, fragTexcoord);
         diffuseTextureColor = vec3(texture.rgb);
-        alpha = alpha;
+        switch (type)
+        {
+            case 0:break;
+            case 1:
+            alpha = texture.a;
+            break;
+            default: break;
+        }
+        
     }
     vec3 ambient =  lightColor * ambientColor * diffuseColor * diffuseTextureColor;
     vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor * diffuseTextureColor;
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
     vec3 result = ambient + diffuse + specular;
+    if (alpha < 0.1f && type == 1)
+        discard;
     FragColor = vec4(result, alpha);
     if(bDepth)
     {

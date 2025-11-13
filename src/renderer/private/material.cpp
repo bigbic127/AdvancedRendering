@@ -19,6 +19,8 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     shader->SetMatrix4("mView", camComponent->GetViewMatrix());
     shader->SetMatrix4("mProjection", camComponent->GetProjectionMatrix());
     shader->SetVector3("cameraPosition",camComponent->GetTransform().position);
+    //parameter
+    shader->SetInt("type", parameter.type);
     shader->SetVector3("diffuseColor", parameter.diffuseColor);
     shader->SetFloat("lightIntensity",*lightComponent->GetIntensity());
     shader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));

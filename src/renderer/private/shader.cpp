@@ -77,6 +77,11 @@ void OpenGLShader::SetFloat(const std::string& name, float value) const
 
 void OpenGLShader::SetInt(const std::string& name, int value) const
 {
+    glUniform1i(GetLocation(name), value);
+}
+
+void OpenGLShader::SetDouble(const std::string& name, int value) const
+{
     glUniform1d(GetLocation(name), value);
 }
 

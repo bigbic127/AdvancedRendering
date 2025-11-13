@@ -405,11 +405,19 @@ void Editor::CreateRightPanel()
                 OpenGLRenderer* renderer = static_cast<OpenGLRenderer*>(Context::GetContext()->renderer);
                 IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
                 MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
-                ImGui::SetCursorPosX(20.0f);                
-                ImGui::Checkbox("Stencil", renderer->GetStencil());
+                ImGui::Checkbox("##Stencil", renderer->GetStencil());
                 ImGui::SameLine();
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Stencil");
+                ImGui::SameLine(120.0f, 0.0f);
                 if(*renderer->GetStencil())
+                {
                     ImGui::SliderFloat("##stencilOutline", &parameter->stencilOutline, 0.01f, 1.0f);
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Color");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::ColorEdit3("##stencilColor", glm::value_ptr(parameter->stencilColor));
+                }
                 else
                 {
                     ImGui::BeginDisabled();
@@ -425,11 +433,50 @@ void Editor::CreateRightPanel()
                 ImGui::SeparatorText("propertices");
                 ImGui::PopFont();
                 ImGui::PopStyleColor();
-                
+
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Shader");
+                ImGui::SameLine(120.0f, 0.0f);
+                const char* shaderItems[] = { "Blinn", "Phong"};
+                static int shader_item_selected_idx = 0;
+                const char* shader_combo_preview_value = shaderItems[shader_item_selected_idx];
+                if(ImGui::BeginCombo("##shaderCombo", shader_combo_preview_value))
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(shaderItems); n++)
+                    {
+                        const bool is_selected = (shader_item_selected_idx == n);
+                        if (ImGui::Selectable(shaderItems[n], is_selected))
+                            shader_item_selected_idx = n;
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Type");
+                ImGui::SameLine(120.0f, 0.0f);
+                const char* typeItems[] = { "Plastic", "Transparent"};
+                static int type_item_selected_idx = 0;
+                const char* type_combo_preview_value = typeItems[type_item_selected_idx];
+                if(ImGui::BeginCombo("##typeCombo", type_combo_preview_value))
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(typeItems); n++)
+                    {
+                        const bool is_selected = (type_item_selected_idx == n);
+                        if (ImGui::Selectable(typeItems[n], is_selected))
+                            type_item_selected_idx = n;
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
                 ImGui::Separator();
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("parameter");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
             }
-
-
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();

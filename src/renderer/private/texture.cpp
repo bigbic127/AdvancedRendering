@@ -25,7 +25,10 @@ OpenGLTexture::OpenGLTexture(const std::string& path)
             case 1:format = GL_RED;break;
             case 2:format = GL_RG;break;
             case 3:format = GL_RGB;break;
-            case 4:format = GL_RGBA;break;
+            case 4:format = GL_RGBA;
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            break;
             default:stbi_image_free(data);
         }
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);

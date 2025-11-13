@@ -5,6 +5,7 @@
 #include "resourceManager.hpp"
 #include "material.hpp"
 #include "meshComponent.hpp"
+#include "cameraComponent.hpp"
 
 OpenGLRenderer::OpenGLRenderer()
 {
@@ -19,7 +20,6 @@ OpenGLRenderer::OpenGLRenderer()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_BLEND);
     CreateBuffer(800, 600);
 }
 
@@ -80,8 +80,24 @@ void OpenGLRenderer::Draw()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     Clear();
+    std::map<float, Actor*> alphaSorted;
+    //colorRender
     for(auto& actor:Context::GetContext()->world->GetActors())
     {
+        MeshComponent* meshComponent = actor->GetComponent<MeshComponent>();
+        if (meshComponent != nullptr)
+        {
+            //alphaActor Check
+            OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
+            glm::vec3 cameraPos = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>()->GetTransform().position;
+            if(material->GetParameter()->type == 1)
+            {
+                float distance = glm::length(cameraPos - meshComponent->GetTransform().position);
+                alphaSorted[distance] = actor.get();
+                continue;
+            }
+        }
+        //DrawMesh
         if(actor.get() == Context::GetContext()->world->GetSelectedActor())
         {
             glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -93,6 +109,11 @@ void OpenGLRenderer::Draw()
             glStencilMask(0x00);
             actor->Draw();//plane
         }
+    }
+    //alphaRender
+    for(std::map<float, Actor*>::reverse_iterator it = alphaSorted.rbegin(); it !=alphaSorted.rend(); ++it)
+    {
+        it->second->Draw();
     }
     //stencilRender
     if (Context::GetContext()->world->GetSelectedActor() != nullptr && bStencil)
