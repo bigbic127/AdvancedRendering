@@ -7,6 +7,7 @@ class ITexture
         virtual ~ITexture() = default;
         virtual void Bind() = 0;
         virtual void UnBind() = 0;
+        virtual unsigned int GetID() const = 0;
 };
 
 class OpenGLTexture:public ITexture
@@ -18,6 +19,7 @@ class OpenGLTexture:public ITexture
         ~OpenGLTexture();
         void Bind() override;
         void UnBind() override;
+        unsigned int GetID() const override {return textureID;}
     private:
         unsigned int textureID;
         int width, height, nrChannels;

@@ -12,6 +12,7 @@
 #include "renderer.hpp"
 #include "material.hpp"
 #include "meshComponent.hpp"
+#include "texture.hpp"
 
 Editor::~Editor()
 {
@@ -72,7 +73,7 @@ void Editor::Update()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     CreateLayout();
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     ImGuiIO& io = ImGui::GetIO();
@@ -391,7 +392,14 @@ void Editor::CreateRightPanel()
                 ImGui::SameLine(120.0f, 0.0f);
                 ImGui::ColorEdit3("##colorpick", lightComponent->GetColor());
                 ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Ambient");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ColorEdit3("##ambientcolorpick", lightComponent->GetAmbient());
+                ImGui::Separator();
+                ImGui::SetCursorPosX(40.0f);
                 ImGui::Text("HDRI");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ImageButton("hdriTexButton", nullptr, ImVec2(64,64));
                 ImGui::Separator();
             }
             if (ImGui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))
@@ -424,6 +432,42 @@ void Editor::CreateRightPanel()
                     ImGui::SliderFloat("##stencilOutline", &parameter->stencilOutline, 0.01f, 1.0f);
                     ImGui::EndDisabled();
                 }
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("post-processing");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Tonemap");
+                ImGui::SameLine(120.0f, 0.0f);
+                const char* postItems[] = { "Linear", "Filmic"};
+                static int post_item_selected_idx = 0;
+                const char* post_combo_preview_value = postItems[post_item_selected_idx];
+                if(ImGui::BeginCombo("##postCombo", post_combo_preview_value))
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(postItems); n++)
+                    {
+                        const bool is_selected = (post_item_selected_idx == n);
+                        if (ImGui::Selectable(postItems[n], is_selected))
+                        {
+                            //ImGui::SliderFloat("");
+
+                            post_item_selected_idx = n;
+                        }
+                        if (is_selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Exposure");
+                ImGui::SameLine(120.0f, 0.0f);
+                float a = 1.0f;
+                ImGui::SliderFloat("##exposurefloat", &a, 0.0f, 16.0f);
+
                 ImGui::Separator();
             }
             if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
@@ -446,9 +490,16 @@ void Editor::CreateRightPanel()
                     {
                         const bool is_selected = (shader_item_selected_idx == n);
                         if (ImGui::Selectable(shaderItems[n], is_selected))
+                        {
+                            IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
+                            MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
+                            parameter->shader = n;
                             shader_item_selected_idx = n;
+                        }
                         if (is_selected)
+                        {
                             ImGui::SetItemDefaultFocus();
+                        }
                     }
                     ImGui::EndCombo();
                 }
@@ -464,7 +515,13 @@ void Editor::CreateRightPanel()
                     {
                         const bool is_selected = (type_item_selected_idx == n);
                         if (ImGui::Selectable(typeItems[n], is_selected))
+                        {
+                            IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
+                            MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
+                            parameter->type = (MaterialType)n;
                             type_item_selected_idx = n;
+                        }
+
                         if (is_selected)
                             ImGui::SetItemDefaultFocus();
                     }
@@ -473,9 +530,84 @@ void Editor::CreateRightPanel()
                 ImGui::Separator();
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
                 ImGui::PushFont(nanumSquare.reqular, 13.0f);
-                ImGui::SeparatorText("parameter");
+                ImGui::SeparatorText("textures");
                 ImGui::PopFont();
                 ImGui::PopStyleColor();
+                //textures
+                IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
+                MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
+                ImGui::SetCursorPosX(40.0f);
+                if(ImGui::BeginTable("textureTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders))
+                {
+                    ImGui::TableSetupColumn("Diffuse", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Roughness", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Metallic", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Normal", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableHeadersRow();
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    if (parameter->diffuseTexture != nullptr)
+                        ImGui::ImageButton("diffTexButton", parameter->diffuseTexture->GetID(), ImVec2(64,64));
+                    else
+                        ImGui::ImageButton("diffTexButton", nullptr, ImVec2(64,64));
+                    ImGui::TableSetColumnIndex(1);
+                    if (parameter->roughnessTextrue != nullptr)
+                        ImGui::ImageButton("rougTexButton", parameter->roughnessTextrue->GetID(), ImVec2(64,64));
+                    else
+                        ImGui::ImageButton("rougTexButton", nullptr, ImVec2(64,64));
+                    ImGui::TableSetColumnIndex(2);
+                    if (parameter->metallicTexture != nullptr)
+                        ImGui::ImageButton("metalTexButton", parameter->metallicTexture->GetID(), ImVec2(64,64));
+                    else
+                        ImGui::ImageButton("metalTexButton", nullptr, ImVec2(64,64));
+                    ImGui::TableSetColumnIndex(3);
+                    if (parameter->normalTexture != nullptr)
+                        ImGui::ImageButton("nolTexButton", parameter->normalTexture->GetID(), ImVec2(64,64));
+                    else
+                        ImGui::ImageButton("nolTexButton", nullptr, ImVec2(64,64));
+                    ImGui::EndTable();
+                }
+                //parameter
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("parameters");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Color");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ColorEdit4("##diffusecolorpick", glm::value_ptr(parameter->diffuseColor));
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Specular");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ColorEdit3("##specularcolorpick", glm::value_ptr(parameter->specularColor));
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Shininess");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat("##specularfloat", &parameter->specularShininess, 1.0f, 1.0f, 128.0f);
+
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("PBR");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();                
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Roughness");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat("##roughnessfloat", &parameter->roughnessFactor, 0.01f, 0.0f, 1.0f);
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Specular");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat("##specualrfloat", &parameter->shininess, 0.01f, 0.0f, 1.0f);
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Metallic");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat("##metallicfloat", &parameter->metallicFactor, 0.01f, 0.0f, 1.0f);
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Normal");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::DragFloat("##normalfloat", &parameter->normalFactor, 0.01f, 0.0f, 1.0f);
             }
             ImGui::EndTabItem();
         }

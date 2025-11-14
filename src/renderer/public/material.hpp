@@ -13,11 +13,13 @@ enum MaterialType
 
 struct MaterialParameter
 {
+    //shader
+    int shader = 0;
     //type
     MaterialType type = MaterialType::Plastic;
     //color
-    glm::vec3 ambientColor{0.0f};
-    glm::vec3 diffuseColor{0.77f};
+    glm::vec3 ambientColor{0.2f};
+    glm::vec4 diffuseColor{0.77f, 0.77f, 0.77f, 1.0f};
     glm::vec3 specularColor{0.5f};
     //texture
     ITexture* diffuseTexture = nullptr;
@@ -29,6 +31,7 @@ struct MaterialParameter
     float roughnessFactor = 0.5f;
     float shininess = 0.5f;
     float specularShininess = 32.0f;
+    float normalFactor = 1.0f;
     //stencil
     bool bStencil = false;
     glm::vec3 stencilColor{0.1f, 1.0f, 0.05f};

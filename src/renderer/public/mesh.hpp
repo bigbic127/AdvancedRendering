@@ -335,3 +335,24 @@ class PlaneMesh:public OpenGLMesh
             return { 0, 2, 1, 0, 3, 2 };
         }
 };
+
+class QaudMesh:public OpenGLMesh
+{
+    public:
+        QaudMesh():OpenGLMesh(CreatePlaneVertices(),
+                              CreatePlaneIndices()){}
+    private:
+        static std::vector<Vertex> CreatePlaneVertices()
+        {
+            return {
+                {{-1.0f, 1.0f, 0.0f}, {0, 1, 0}, {0, 1}},
+                {{-1.0f,-1.0f, 0.0f}, {0, 1, 0}, {0, 0}},
+                {{ 1.0f,-1.0f, 0.0f}, {0, 1, 0}, {1, 0}},
+                {{ 1.0f, 1.0f, 0.0f}, {0, 1, 0}, {1, 1}},
+            };
+        }
+        static std::vector<unsigned int> CreatePlaneIndices()
+        {
+            return { 0, 1, 2, 0, 2, 3 };
+        }
+};

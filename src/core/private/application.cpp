@@ -49,7 +49,7 @@ void Application::Init()
     {
         planeMaterial = itMat->second.get();
     }
-    //create StardardActor;
+    //create sphere actor;
     auto it = resourceManager->GetMeshes().find("sphere");
     if(it != resourceManager->GetMeshes().end())
     {
@@ -59,12 +59,14 @@ void Application::Init()
         actor->GetComponent<MeshComponent>()->SetScale(glm::vec3(2.0f));
         world->SetSelectedActor(actor);
     }
+    //create plane actor
     it = resourceManager->GetMeshes().find("plane");
     if(it != resourceManager->GetMeshes().end())
     {
         auto actor = world->CreateActor("Plane Actor");
         actor->AddComponent<MeshComponent>(it->second.get(), planeMaterial);
     }
+    /*
     //grass Test
     auto grassMaterial = resourceManager->FindMaterial("grassMaterial");
     for(size_t i = 0; i< 50; i++)
@@ -102,6 +104,7 @@ void Application::Init()
             actor->GetComponent<MeshComponent>()->SetPosition(glm::vec3(x, 2.5f, z));
         }
     }
+    */
     Loop();
 }
 

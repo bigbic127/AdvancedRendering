@@ -23,6 +23,7 @@ class OpenGLShader:public IShader
         void SetFloat(const std::string& name, float value) const;
         void SetDouble(const std::string& name, int value) const;
         void SetVector3(const std::string& name, const glm::vec3& value) const;
+        void SetVector4(const std::string& name, const glm::vec4& value) const;
         void SetMatrix4(const std::string& name, const glm::mat4& value) const;
         GLint GetLocation(const std::string& name) const;
     private:

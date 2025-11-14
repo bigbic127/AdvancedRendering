@@ -7,7 +7,7 @@ in vec2 fragTexcoord;
 
 //color
 uniform vec3 ambientColor = vec3(0.0f);
-uniform vec3 diffuseColor = vec3(1.0f);
+uniform vec4 diffuseColor = vec4(1.0f);
 uniform vec3 specularColor = vec3(0.5f);
 //texture
 uniform bool bDiffuse = false;
@@ -21,12 +21,14 @@ uniform sampler2D normalTexture;
 //propertices
 uniform float metallicFactor = 0.0f;
 uniform float roughnessFactor = 0.5f;
-uniform float shininess = 0.5f;
+uniform float shininessFactor = 0.5f;
 uniform float specularShininess = 32.0f;
 //light
 uniform vec3 lightPosition;
 uniform float lightIntensity = 1.0f;
 uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
+uniform vec3 lightAmbient = vec3(0.0f, 0.0f, 0.0f);
+
 uniform vec3 directionalLight = vec3(0.0f, 1.0f, 0.0f);
 //camera
 uniform vec3 cameraPosition;
@@ -37,7 +39,8 @@ uniform bool bDepth = false;
 uniform vec3 stencilColor = vec3(0.1f, 1.0f, 0.05f);
 uniform bool bStencil = false;
 
-//type
+// 0:blinn 1:phong
+uniform int shader = 0;
 // 0:Plastic 1:Transparent
 uniform int type = 0;
 
@@ -55,11 +58,21 @@ void main()
     float lightValue = max(dot(normal, lightDir),0.0f);
     //specular
     vec3 specularDir = normalize(cameraPosition - fragPosition);
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float reflectValue = pow(max(dot(specularDir, reflectDir),0.0f), specularShininess);
+    float reflectValue = 0.0f;
+    if(shader == 0)//blinn
+    {
+        vec3 halfwayDir = normalize(lightDir + specularDir); 
+        reflectValue = pow(max(dot(normal, halfwayDir),0.0f), specularShininess);
+    }else
+    {
+        vec3 reflectDir = reflect(-lightDir, normal);
+        reflectValue = pow(max(dot(specularDir, reflectDir),0.0f), specularShininess);
+    }
     //diffuse
     vec3 diffuseTextureColor = vec3(1.0f, 1.0f, 1.0f);
     float alpha = 1.0f;
+    if (type == 1)
+        alpha = diffuseColor.w;
     if(bDiffuse)
     {
         vec4 texture = texture(diffuseTexture, fragTexcoord);
@@ -68,16 +81,15 @@ void main()
         {
             case 0:break;
             case 1:
-            alpha = texture.a;
+            alpha *= texture.a;
             break;
             default: break;
         }
-        
     }
-    vec3 ambient =  lightColor * ambientColor * diffuseColor * diffuseTextureColor;
-    vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor * diffuseTextureColor;
+    vec3 ambient =  lightColor * ambientColor * diffuseColor.xyz * diffuseTextureColor;
+    vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor.xyz * diffuseTextureColor;
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
-    vec3 result = ambient + diffuse + specular;
+    vec3 result = ambient + diffuse + specular + lightAmbient;
     if (alpha < 0.1f && type == 1)
         discard;
     FragColor = vec4(result, alpha);

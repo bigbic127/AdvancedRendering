@@ -20,10 +20,21 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     shader->SetMatrix4("mProjection", camComponent->GetProjectionMatrix());
     shader->SetVector3("cameraPosition",camComponent->GetTransform().position);
     //parameter
+    shader->SetInt("shader", parameter.shader);
     shader->SetInt("type", parameter.type);
-    shader->SetVector3("diffuseColor", parameter.diffuseColor);
+    shader->SetVector3("ambientColor", parameter.ambientColor);
+    shader->SetVector4("diffuseColor", parameter.diffuseColor);
+    shader->SetVector3("specularColor", parameter.specularColor);
+    shader->SetFloat("specularShininess", parameter.specularShininess);
+
+    shader->SetFloat("shininessFactor", parameter.shininess);
+    shader->SetFloat("roughnessFactor", parameter.roughnessFactor);
+    shader->SetFloat("metallicFactor", parameter.metallicFactor);
+
     shader->SetFloat("lightIntensity",*lightComponent->GetIntensity());
     shader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));
+    shader->SetVector3("lightAmbient", glm::make_vec3(lightComponent->GetAmbient()));
+
     shader->SetVector3("directionalLight",lightComponent->GetDirection());
     if (parameter.diffuseTexture != nullptr)
     {

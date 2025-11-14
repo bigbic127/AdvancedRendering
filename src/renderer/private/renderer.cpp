@@ -6,9 +6,18 @@
 #include "material.hpp"
 #include "meshComponent.hpp"
 #include "cameraComponent.hpp"
+#include "logger.hpp"
 
 OpenGLRenderer::OpenGLRenderer()
 {
+    //create mesh and shader
+    rendererMesh = std::make_unique<QaudMesh>();
+    const std::string vsPath = "/shader/posteffect.vert";
+    const std::string fsPath = "/shader/posteffect.frag";
+    rendererShader = std::make_unique<OpenGLShader>(vsPath, fsPath);
+    static_cast<OpenGLShader*>(rendererShader.get())->SetInt("screenTexture", 0);
+    glActiveTexture(GL_TEXTURE0);
+    //opengl setting
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
@@ -52,7 +61,21 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
     //
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        Logger::ErrorMessage("Framebuffer is not complete!");
     glViewport(0, 0, width, height);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //post framebuffer
+    glGenFramebuffers(1, &fbo2);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
+    //colorTexture
+    glGenTextures(1, &cbo2);
+    glBindTexture(GL_TEXTURE_2D, cbo2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cbo2, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -79,6 +102,7 @@ void OpenGLRenderer::Begin()
 void OpenGLRenderer::Draw()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glEnable(GL_DEPTH_TEST);
     Clear();
     std::map<float, Actor*> alphaSorted;
     //colorRender
@@ -90,7 +114,7 @@ void OpenGLRenderer::Draw()
             //alphaActor Check
             OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
             glm::vec3 cameraPos = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>()->GetTransform().position;
-            if(material->GetParameter()->type == 1)
+            if(material->GetParameter()->type == MaterialType::Transparent)
             {
                 float distance = glm::length(cameraPos - meshComponent->GetTransform().position);
                 alphaSorted[distance] = actor.get();
@@ -113,6 +137,8 @@ void OpenGLRenderer::Draw()
     //alphaRender
     for(std::map<float, Actor*>::reverse_iterator it = alphaSorted.rbegin(); it !=alphaSorted.rend(); ++it)
     {
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
         it->second->Draw();
     }
     //stencilRender
@@ -132,6 +158,19 @@ void OpenGLRenderer::Draw()
         glStencilFunc(GL_ALWAYS, 0, 0xFF);
         glEnable(GL_DEPTH_TEST);
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //posteffect
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
+    glDisable(GL_DEPTH_TEST);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    rendererShader->UseProgram();
+    rendererMesh->Bind();
+    glBindTexture(GL_TEXTURE_2D, cbo);
+    rendererMesh->Draw();
+    rendererMesh->UnBind();
+    rendererShader->EndProgam();
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

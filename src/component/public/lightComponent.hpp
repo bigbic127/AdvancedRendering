@@ -18,9 +18,11 @@ class LightComponent:public SceneComponent
         void SetColor(glm::vec3 color){this->color = color;}
         float* GetIntensity(){return &lightIntensity;}
         float* GetColor(){return glm::value_ptr(color);}
+        float* GetAmbient(){return glm::value_ptr(ambient);}
     private:
         float lightIntensity = 1.0f;
         glm::vec3 color{1.0f};
+        glm::vec3 ambient{0.0f};
 };
 
 class DirectionalLightComponent:public LightComponent

@@ -1,4 +1,8 @@
 #pragma once
+#include <memory>
+
+class IMesh;
+class IShader;
 
 class IRenderer
 {
@@ -23,13 +27,15 @@ class OpenGLRenderer:public IRenderer
         void Begin() override;
         void Draw() override;
         void Update() override;
-        unsigned int& GetColorBuffer() override{return cbo;}
+        unsigned int& GetColorBuffer() override{return cbo2;}
         void ResizeBuffer(int w, int h);
         float GetAspect()const{return float(width)/height;}
         bool* GetStencil(){return &bStencil;}
     private:
         void CreateBuffer(int width, int height);
-        unsigned int fbo, rbo, cbo;
+        unsigned int fbo, rbo, cbo, fbo2, cbo2;
         int width, height;
         bool bStencil = false;
+        std::unique_ptr<IMesh> rendererMesh;
+        std::unique_ptr<IShader> rendererShader;
 };
