@@ -166,6 +166,7 @@ void OpenGLRenderer::Draw()
     glClear(GL_COLOR_BUFFER_BIT);
     rendererShader->UseProgram();
     rendererMesh->Bind();
+    static_cast<OpenGLShader*>(rendererShader.get())->SetInt("postEffecttype", postEffect);
     glBindTexture(GL_TEXTURE_2D, cbo);
     rendererMesh->Draw();
     rendererMesh->UnBind();

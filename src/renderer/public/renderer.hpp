@@ -4,6 +4,16 @@
 class IMesh;
 class IShader;
 
+enum PostEffectType
+{
+    None = 0,
+    OnMinus,
+    Gray,
+    Kernel,
+    Blur,
+    Edge
+};
+
 class IRenderer
 {
     public:
@@ -31,6 +41,8 @@ class OpenGLRenderer:public IRenderer
         void ResizeBuffer(int w, int h);
         float GetAspect()const{return float(width)/height;}
         bool* GetStencil(){return &bStencil;}
+        void SetEffectType(PostEffectType type){postEffect = type;}
+
     private:
         void CreateBuffer(int width, int height);
         unsigned int fbo, rbo, cbo, fbo2, cbo2;
@@ -38,4 +50,5 @@ class OpenGLRenderer:public IRenderer
         bool bStencil = false;
         std::unique_ptr<IMesh> rendererMesh;
         std::unique_ptr<IShader> rendererShader;
+        PostEffectType postEffect = PostEffectType::None;
 };

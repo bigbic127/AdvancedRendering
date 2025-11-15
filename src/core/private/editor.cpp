@@ -439,9 +439,9 @@ void Editor::CreateRightPanel()
                 ImGui::PopStyleColor();
 
                 ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Tonemap");
+                ImGui::Text("Effect");
                 ImGui::SameLine(120.0f, 0.0f);
-                const char* postItems[] = { "Linear", "Filmic"};
+                const char* postItems[] = { "None", "OnMinus", "Gray", "Sharpen", "Blur", "Edge"};
                 static int post_item_selected_idx = 0;
                 const char* post_combo_preview_value = postItems[post_item_selected_idx];
                 if(ImGui::BeginCombo("##postCombo", post_combo_preview_value))
@@ -451,8 +451,7 @@ void Editor::CreateRightPanel()
                         const bool is_selected = (post_item_selected_idx == n);
                         if (ImGui::Selectable(postItems[n], is_selected))
                         {
-                            //ImGui::SliderFloat("");
-
+                            renderer->SetEffectType((PostEffectType)n);
                             post_item_selected_idx = n;
                         }
                         if (is_selected)
@@ -462,12 +461,6 @@ void Editor::CreateRightPanel()
                     }
                     ImGui::EndCombo();
                 }
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Exposure");
-                ImGui::SameLine(120.0f, 0.0f);
-                float a = 1.0f;
-                ImGui::SliderFloat("##exposurefloat", &a, 0.0f, 16.0f);
-
                 ImGui::Separator();
             }
             if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
@@ -481,7 +474,7 @@ void Editor::CreateRightPanel()
                 ImGui::SetCursorPosX(40.0f);
                 ImGui::Text("Shader");
                 ImGui::SameLine(120.0f, 0.0f);
-                const char* shaderItems[] = { "Blinn", "Phong"};
+                const char* shaderItems[] = { "Blinn", "Phong", "PBR"};
                 static int shader_item_selected_idx = 0;
                 const char* shader_combo_preview_value = shaderItems[shader_item_selected_idx];
                 if(ImGui::BeginCombo("##shaderCombo", shader_combo_preview_value))
