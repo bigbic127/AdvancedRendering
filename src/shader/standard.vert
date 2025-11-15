@@ -4,12 +4,21 @@ layout(location = 1) in vec3 vNormal;
 layout(location = 2) in vec2 vTexcoord;
 layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 biTangent;
-uniform mat4 mModel, mView, mProjection;
+layout(std140) uniform mCamera
+{
+    mat4 mView;
+    mat4 mProjection;
+};
+uniform mat4 mModel;
 uniform bool bStencil = false;
 uniform float stencilOutline = 0.1f;
-out vec3 fragPosition;
-out vec3 fragNormal;
-out vec2 fragTexcoord;
+//output
+out OutFrag
+{
+    vec3 fragPosition;
+    vec3 fragNormal;
+    vec2 fragTexcoord;
+} outFrag;
 
 void main()
 {
@@ -18,8 +27,8 @@ void main()
     {
         position += (vNormal*stencilOutline);
     }
-    fragPosition = vec3(mModel * vec4(position, 1.0f));
-    fragNormal = transpose(inverse(mat3(mModel))) * vNormal;
-    fragTexcoord = vTexcoord;
+    outFrag.fragPosition = vec3(mModel * vec4(position, 1.0f));
+    outFrag.fragNormal = transpose(inverse(mat3(mModel))) * vNormal;
+    outFrag.fragTexcoord = vTexcoord;
     gl_Position = mProjection * mView * mModel * vec4(position, 1.0f);
 }

@@ -2,6 +2,11 @@
 #include "sceneComponent.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
+#include "texture.hpp"
+
+class IMesh;
+class IShader;
 
 enum LightType
 {
@@ -14,6 +19,7 @@ enum LightType
 class LightComponent:public SceneComponent
 {
     public:
+        LightComponent();
         void SetIntensity(float intensity){lightIntensity = intensity;}
         void SetColor(glm::vec3 color){this->color = color;}
         float* GetIntensity(){return &lightIntensity;}
@@ -23,6 +29,9 @@ class LightComponent:public SceneComponent
         float lightIntensity = 1.0f;
         glm::vec3 color{1.0f};
         glm::vec3 ambient{0.0f};
+        std::unique_ptr<IMesh> skyboxMesh;
+        std::unique_ptr<IShader> skyboxShader;
+        std::unique_ptr<ITexture> skyboxTexture;
 };
 
 class DirectionalLightComponent:public LightComponent

@@ -12,8 +12,8 @@ Application::Application()
 {
     if(window.Init())
     {
-        renderer = std::make_unique<OpenGLRenderer>();
         resourceManager = std::make_unique<ResourceManager>();
+        renderer = std::make_unique<OpenGLRenderer>();
         world = std::make_unique<World>();        
         context = std::make_unique<Context>(&window, renderer.get(), window.GetEditor(), world.get(), resourceManager.get());
         Init();
@@ -110,6 +110,7 @@ void Application::Init()
 
 void Application::Loop()
 {
+    renderer->Begin();
     while(!window.ShouldClose())
     {
         world->Update();

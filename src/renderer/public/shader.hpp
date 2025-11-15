@@ -26,6 +26,7 @@ class OpenGLShader:public IShader
         void SetVector4(const std::string& name, const glm::vec4& value) const;
         void SetMatrix4(const std::string& name, const glm::mat4& value) const;
         GLint GetLocation(const std::string& name) const;
+        unsigned int GetID() const {return programID;}
     private:
         std::string LoadShaderSource(const std::string& path);
         unsigned int programID;

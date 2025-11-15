@@ -1,9 +1,12 @@
 #version 430 core
 
 out vec4 FragColor;
-in vec3 fragPosition;
-in vec3 fragNormal;
-in vec2 fragTexcoord;
+in OutFrag
+{
+    vec3 fragPosition;
+    vec3 fragNormal;
+    vec2 fragTexcoord;
+} inFrag;
 
 //color
 uniform vec3 ambientColor = vec3(0.0f);
@@ -52,12 +55,12 @@ float LinearizeDepth(float depth)
 
 void main()
 {
-    vec3 normal = normalize(fragNormal);
+    vec3 normal = normalize(inFrag.fragNormal);
     //light
     vec3 lightDir = normalize(directionalLight);
     float lightValue = max(dot(normal, lightDir),0.0f);
     //specular
-    vec3 specularDir = normalize(cameraPosition - fragPosition);
+    vec3 specularDir = normalize(cameraPosition - inFrag.fragPosition);
     float reflectValue = 0.0f;
     if(shader == 0)//blinn
     {
@@ -75,7 +78,7 @@ void main()
         alpha = diffuseColor.w;
     if(bDiffuse)
     {
-        vec4 texture = texture(diffuseTexture, fragTexcoord);
+        vec4 texture = texture(diffuseTexture, inFrag.fragTexcoord);
         diffuseTextureColor = vec3(texture.rgb);
         switch (type)
         {

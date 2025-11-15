@@ -16,8 +16,8 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     CameraComponent* camComponent = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>();
     LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
     shader->SetMatrix4("mModel", component->GetMatrix());
-    shader->SetMatrix4("mView", camComponent->GetViewMatrix());
-    shader->SetMatrix4("mProjection", camComponent->GetProjectionMatrix());
+    //shader->SetMatrix4("mView", camComponent->GetViewMatrix());
+    //shader->SetMatrix4("mProjection", camComponent->GetProjectionMatrix());
     shader->SetVector3("cameraPosition",camComponent->GetTransform().position);
     //parameter
     shader->SetInt("shader", parameter.shader);

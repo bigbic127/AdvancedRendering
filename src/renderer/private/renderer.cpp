@@ -6,7 +6,9 @@
 #include "material.hpp"
 #include "meshComponent.hpp"
 #include "cameraComponent.hpp"
+#include "lightComponent.hpp"
 #include "logger.hpp"
+#include "shader.hpp"
 
 OpenGLRenderer::OpenGLRenderer()
 {
@@ -96,11 +98,29 @@ void OpenGLRenderer::Clear()
 
 void OpenGLRenderer::Begin()
 {
-    
+    //shader uniform
+    IShader* shader = Context::GetContext()->resourceManager->FindShader("standardShader");
+    unsigned int shaderID = static_cast<OpenGLShader*>(shader)->GetID();
+    unsigned int index = glGetUniformBlockIndex(shaderID, "mCamera");
+    glUniformBlockBinding(shaderID, index, 0);
+    //Shader Uniform buffers
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2*sizeof(glm::mat4));
 }
 
 void OpenGLRenderer::Draw()
 {
+    //Shader Uniform
+    CameraComponent* cameraComponent = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>();
+    LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetViewMatrix()));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetProjectionMatrix()));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glEnable(GL_DEPTH_TEST);
     Clear();
@@ -173,6 +193,10 @@ void OpenGLRenderer::Draw()
     rendererShader->EndProgam();
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //skybox
+    LightComponent* light = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
+    glDepthFunc(GL_LEQUAL);
+    glDepthFunc(GL_LESS);
 }
 
 void OpenGLRenderer::Update()
