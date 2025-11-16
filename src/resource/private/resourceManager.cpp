@@ -8,11 +8,13 @@ ResourceManager::ResourceManager()
     auto coneMesh = std::make_unique<ConeMesh>(3,3.0f,1.0f);
     auto cylinderMesh = std::make_unique<CylinderMesh>(32, 2.0f, 2.0f);
     auto planeMesh = std::make_unique<PlaneMesh>(10.0f);
+    auto skyboxMesh = std::make_unique<CubeMesh>();
     meshes.emplace("sphere", std::move(sphere));
     meshes.emplace("cube", std::move(cube));
     meshes.emplace("cone", std::move(coneMesh));
     meshes.emplace("cylinder", std::move(cylinderMesh));
     meshes.emplace("plane", std::move(planeMesh));
+    meshes.emplace("skybox", std::move(skyboxMesh));
     //create mercury texture
     const std::string texPath = "/textures/mercury.jpg";
     auto mercuryTexture = std::make_unique<OpenGLTexture>(texPath);
@@ -38,14 +40,31 @@ ResourceManager::ResourceManager()
     auto containerspecTexture = std::make_unique<OpenGLTexture>(containerspecPath);
     ITexture* ptrcontainerspecTexture = containerspecTexture.get();
     textures.emplace("containerspec", std::move(containerspecTexture));
- 
-    //create shader
+    //create skybox texture
+    std::vector<std::string> skyboxPaths
+                                {
+                                    "/textures/skybox/right.jpg",
+                                    "/textures/skybox/left.jpg",
+                                    "/textures/skybox/top.jpg",
+                                    "/textures/skybox/bottom.jpg",
+                                    "/textures/skybox/front.jpg",
+                                    "/textures/skybox/back.jpg"
+                                };
+    auto skyboxTexture = std::make_unique<OpenGLCubeTexture>(skyboxPaths);
+    textures.emplace("skybox", std::move(skyboxTexture));
+
+    //create standard shader
     const std::string vsPath = "/shader/standard.vert";
     const std::string fsPath = "/shader/standard.frag";
-    //create standard shader
     auto standardShader = std::make_unique<OpenGLShader>(vsPath, fsPath);
     IShader* ptrShader = standardShader.get();
     shaders.emplace("standardShader", std::move(standardShader));
+    //create skybox shader
+    const std::string skyboxvsPath = "/shader/skybox.vert";
+    const std::string skyboxfsPath = "/shader/skybox.frag";
+    auto skyboxhader = std::make_unique<OpenGLShader>(skyboxvsPath, skyboxfsPath);
+    shaders.emplace("skyboxShader", std::move(skyboxhader));
+
     //create standard material
     auto standardMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     IMaterial* ptrMaterial = standardMaterial.get();

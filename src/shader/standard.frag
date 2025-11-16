@@ -26,13 +26,15 @@ uniform float metallicFactor = 0.0f;
 uniform float roughnessFactor = 0.5f;
 uniform float shininessFactor = 0.5f;
 uniform float specularShininess = 32.0f;
-//light
+//light //after.. uniform buffer change.
 uniform vec3 lightPosition;
 uniform float lightIntensity = 1.0f;
 uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
 uniform vec3 lightAmbient = vec3(0.0f, 0.0f, 0.0f);
-
 uniform vec3 directionalLight = vec3(0.0f, 1.0f, 0.0f);
+uniform bool bSkybox = false;
+uniform float refractionFactor = 0.0f;
+uniform samplerCube skyboxTexture;
 //camera
 uniform vec3 cameraPosition;
 uniform float near = 0.1; 
@@ -89,10 +91,20 @@ void main()
             default: break;
         }
     }
-    vec3 ambient =  lightColor * ambientColor * diffuseColor.xyz * diffuseTextureColor;
+    //skybox
+    vec3 skyboxColor = vec3(1.0f, 1.0f, 1.0f);
+    if (bSkybox)
+    {
+        vec3 I = normalize(inFrag.fragPosition-cameraPosition);
+        vec3 R = reflect(I, normal);
+        skyboxColor = texture(skyboxTexture, R).rgb;
+    }
+    //result
+    vec3 ambient =  lightColor * ambientColor * diffuseColor.xyz * diffuseTextureColor + lightAmbient;
     vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor.xyz * diffuseTextureColor;
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
-    vec3 result = ambient + diffuse + specular + lightAmbient;
+    vec3 refraction = skyboxColor * refractionFactor;
+    vec3 result = ambient + diffuse + specular + refraction;
     if (alpha < 0.1f && type == 1)
         discard;
     FragColor = vec4(result, alpha);

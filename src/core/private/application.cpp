@@ -55,8 +55,8 @@ void Application::Init()
     {
         auto actor = world->CreateActor("Mesh Actor");
         actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
-        actor->GetComponent<MeshComponent>()->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
-        actor->GetComponent<MeshComponent>()->SetScale(glm::vec3(2.0f));
+        actor->GetComponent<MeshComponent>()->SetPosition(glm::vec3(0.0f, 2.5f, 0.0f));
+        actor->GetComponent<MeshComponent>()->SetScale(glm::vec3(3.0f));
         world->SetSelectedActor(actor);
     }
     //create plane actor
@@ -118,7 +118,6 @@ void Application::Loop()
         renderer->Draw();
         window.Update();
     }
-    
 }
 
 int main()

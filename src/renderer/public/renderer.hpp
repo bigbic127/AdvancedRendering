@@ -45,7 +45,7 @@ class OpenGLRenderer:public IRenderer
 
     private:
         void CreateBuffer(int width, int height);
-        unsigned int fbo, rbo, cbo, fbo2, cbo2, ubo;
+        unsigned int fbo, rbo, cbo, fbo2, cbo2, vubo, fubo;
         int width, height;
         bool bStencil = false;
         std::unique_ptr<IMesh> rendererMesh;

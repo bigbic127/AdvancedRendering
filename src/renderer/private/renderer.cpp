@@ -99,16 +99,23 @@ void OpenGLRenderer::Clear()
 void OpenGLRenderer::Begin()
 {
     //shader uniform
+    //standard
     IShader* shader = Context::GetContext()->resourceManager->FindShader("standardShader");
     unsigned int shaderID = static_cast<OpenGLShader*>(shader)->GetID();
     unsigned int index = glGetUniformBlockIndex(shaderID, "mCamera");
     glUniformBlockBinding(shaderID, index, 0);
+    //skybox
+    shader = Context::GetContext()->resourceManager->FindShader("skyboxShader");
+    shaderID = static_cast<OpenGLShader*>(shader)->GetID();
+    index = glGetUniformBlockIndex(shaderID, "mCamera");
+    glUniformBlockBinding(shaderID, index, 0);
+    
     //Shader Uniform buffers
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glGenBuffers(1, &vubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, vubo);
     glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2*sizeof(glm::mat4));
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, vubo, 0, 2*sizeof(glm::mat4));
 }
 
 void OpenGLRenderer::Draw()
@@ -116,11 +123,11 @@ void OpenGLRenderer::Draw()
     //Shader Uniform
     CameraComponent* cameraComponent = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>();
     LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, vubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetViewMatrix()));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
+    //frameRender
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glEnable(GL_DEPTH_TEST);
     Clear();
@@ -129,17 +136,16 @@ void OpenGLRenderer::Draw()
     for(auto& actor:Context::GetContext()->world->GetActors())
     {
         MeshComponent* meshComponent = actor->GetComponent<MeshComponent>();
-        if (meshComponent != nullptr)
+        if (meshComponent == nullptr)
+            continue;
+        //alphaActor Check
+        OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
+        glm::vec3 cameraPos = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>()->GetTransform().position;
+        if(material->GetParameter()->type == MaterialType::Transparent)
         {
-            //alphaActor Check
-            OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
-            glm::vec3 cameraPos = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>()->GetTransform().position;
-            if(material->GetParameter()->type == MaterialType::Transparent)
-            {
-                float distance = glm::length(cameraPos - meshComponent->GetTransform().position);
-                alphaSorted[distance] = actor.get();
-                continue;
-            }
+            float distance = glm::length(cameraPos - meshComponent->GetTransform().position);
+            alphaSorted[distance] = actor.get();
+            continue;
         }
         //DrawMesh
         if(actor.get() == Context::GetContext()->world->GetSelectedActor())
@@ -161,6 +167,12 @@ void OpenGLRenderer::Draw()
         glStencilMask(0xFF);
         it->second->Draw();
     }
+    //skybox
+    LightComponent* light = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
+    glDepthFunc(GL_LEQUAL);
+    glStencilMask(0x00);
+    light->Draw();
+    glDepthFunc(GL_LESS);
     //stencilRender
     if (Context::GetContext()->world->GetSelectedActor() != nullptr && bStencil)
     {
@@ -193,10 +205,6 @@ void OpenGLRenderer::Draw()
     rendererShader->EndProgam();
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //skybox
-    LightComponent* light = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
-    glDepthFunc(GL_LEQUAL);
-    glDepthFunc(GL_LESS);
 }
 
 void OpenGLRenderer::Update()

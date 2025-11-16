@@ -3,10 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
-#include "texture.hpp"
 
 class IMesh;
 class IShader;
+class ITexture;
 
 enum LightType
 {
@@ -25,13 +25,15 @@ class LightComponent:public SceneComponent
         float* GetIntensity(){return &lightIntensity;}
         float* GetColor(){return glm::value_ptr(color);}
         float* GetAmbient(){return glm::value_ptr(ambient);}
+        ITexture* GetSkyboxTexture() const{return skyboxTexture;}
+        void Draw() override;
     private:
         float lightIntensity = 1.0f;
         glm::vec3 color{1.0f};
         glm::vec3 ambient{0.0f};
-        std::unique_ptr<IMesh> skyboxMesh;
-        std::unique_ptr<IShader> skyboxShader;
-        std::unique_ptr<ITexture> skyboxTexture;
+        IMesh* skyboxMesh;
+        IShader* skyboxShader;
+        ITexture* skyboxTexture;
 };
 
 class DirectionalLightComponent:public LightComponent

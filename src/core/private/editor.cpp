@@ -18,7 +18,6 @@ Editor::~Editor()
 {
     ImGui_ImplOpenGL3_DestroyDeviceObjects();
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
@@ -397,9 +396,9 @@ void Editor::CreateRightPanel()
                 ImGui::ColorEdit3("##ambientcolorpick", lightComponent->GetAmbient());
                 ImGui::Separator();
                 ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("HDRI");
+                ImGui::Text("Skybox");
                 ImGui::SameLine(120.0f, 0.0f);
-                ImGui::ImageButton("hdriTexButton", nullptr, ImVec2(64,64));
+                ImGui::ImageButton("hdriTexButton", lightComponent->GetSkyboxTexture()->GetID(), ImVec2(64*3,64*2));
                 ImGui::Separator();
             }
             if (ImGui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))
@@ -561,46 +560,54 @@ void Editor::CreateRightPanel()
                     ImGui::EndTable();
                 }
                 //parameter
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
-                ImGui::PushFont(nanumSquare.reqular, 13.0f);
-                ImGui::SeparatorText("parameters");
-                ImGui::PopFont();
-                ImGui::PopStyleColor();
+                if(shader_item_selected_idx != 2) //blinn phong
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                    ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                    ImGui::SeparatorText("parameters");
+                    ImGui::PopFont();
+                    ImGui::PopStyleColor();
 
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Color");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::ColorEdit4("##diffusecolorpick", glm::value_ptr(parameter->diffuseColor));
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Specular");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::ColorEdit3("##specularcolorpick", glm::value_ptr(parameter->specularColor));
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Shininess");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat("##specularfloat", &parameter->specularShininess, 1.0f, 1.0f, 128.0f);
-
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
-                ImGui::PushFont(nanumSquare.reqular, 13.0f);
-                ImGui::SeparatorText("PBR");
-                ImGui::PopFont();
-                ImGui::PopStyleColor();                
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Roughness");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat("##roughnessfloat", &parameter->roughnessFactor, 0.01f, 0.0f, 1.0f);
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Specular");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat("##specualrfloat", &parameter->shininess, 0.01f, 0.0f, 1.0f);
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Metallic");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat("##metallicfloat", &parameter->metallicFactor, 0.01f, 0.0f, 1.0f);
-                ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Normal");
-                ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat("##normalfloat", &parameter->normalFactor, 0.01f, 0.0f, 1.0f);
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Color");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::ColorEdit4("##diffusecolorpick", glm::value_ptr(parameter->diffuseColor));
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Specular");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::ColorEdit3("##specularcolorpick", glm::value_ptr(parameter->specularColor));
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Shininess");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##specularfloat", &parameter->specularShininess, 1.0f, 1.0f, 128.0f);
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Refraction");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##refractionfloat", &parameter->refraction, 0.01f, 0.0f, 1.0f);
+                }else if(shader_item_selected_idx == 2)//PBR parameter
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                    ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                    ImGui::SeparatorText("PBR");
+                    ImGui::PopFont();
+                    ImGui::PopStyleColor();                
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Roughness");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##roughnessfloat", &parameter->roughnessFactor, 0.01f, 0.0f, 1.0f);
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Specular");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##specualrfloat", &parameter->shininess, 0.01f, 0.0f, 1.0f);
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Metallic");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##metallicfloat", &parameter->metallicFactor, 0.01f, 0.0f, 1.0f);
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("Normal");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##normalfloat", &parameter->normalFactor, 0.01f, 0.0f, 1.0f);
+                }
             }
             ImGui::EndTabItem();
         }

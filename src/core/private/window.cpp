@@ -1,8 +1,10 @@
 #include "window.hpp"
 #include "logger.hpp"
+#include <imgui_impl_glfw.h>
 
 Window::~Window()
 {
+    ImGui_ImplGlfw_Shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();
 }

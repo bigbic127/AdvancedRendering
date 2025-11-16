@@ -30,15 +30,27 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     shader->SetFloat("shininessFactor", parameter.shininess);
     shader->SetFloat("roughnessFactor", parameter.roughnessFactor);
     shader->SetFloat("metallicFactor", parameter.metallicFactor);
-
+    //light
     shader->SetFloat("lightIntensity",*lightComponent->GetIntensity());
     shader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));
     shader->SetVector3("lightAmbient", glm::make_vec3(lightComponent->GetAmbient()));
+    if(lightComponent->GetSkyboxTexture() != nullptr)
+    {
+        shader->SetBool("bSkybox", true);
+        shader->SetFloat("refractionFactor", parameter.refraction);
+        GLint location = shader->GetLocation("skyboxTexture");
+        glUniform1i(location, 0);
+        glActiveTexture(GL_TEXTURE0);
+        lightComponent->GetSkyboxTexture()->Bind();
+    }
 
     shader->SetVector3("directionalLight",lightComponent->GetDirection());
     if (parameter.diffuseTexture != nullptr)
     {
         shader->SetBool("bDiffuse", true);
+        GLint location = shader->GetLocation("diffuseTexture");
+        glUniform1i(location, 1);
+        glActiveTexture(GL_TEXTURE1);
         parameter.diffuseTexture->Bind();
     }
     shader->SetBool("bStencil",parameter.bStencil);
@@ -48,10 +60,17 @@ void OpenGLMaterial::Draw(MeshComponent* component)
 
 void OpenGLMaterial::UnBind()
 {
+    LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
     if (parameter.diffuseTexture != nullptr)
     {
         shader->SetBool("bDiffuse", false);
         parameter.diffuseTexture->UnBind();
+    }
+    //skybox
+    if(lightComponent->GetSkyboxTexture() != nullptr)
+    {
+        shader->SetBool("bSkybox", false);
+        lightComponent->GetSkyboxTexture()->UnBind();
     }
     shader->EndProgam();
 }

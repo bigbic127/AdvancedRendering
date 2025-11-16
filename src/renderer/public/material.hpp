@@ -21,6 +21,7 @@ struct MaterialParameter
     glm::vec3 ambientColor{0.2f};
     glm::vec4 diffuseColor{0.77f, 0.77f, 0.77f, 1.0f};
     glm::vec3 specularColor{0.5f};
+    float refraction = 0.0f;
     //texture
     ITexture* diffuseTexture = nullptr;
     ITexture* roughnessTextrue = nullptr;
