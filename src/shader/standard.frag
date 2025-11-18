@@ -34,6 +34,7 @@ uniform vec3 lightAmbient = vec3(0.0f, 0.0f, 0.0f);
 uniform vec3 directionalLight = vec3(0.0f, 1.0f, 0.0f);
 uniform bool bSkybox = false;
 uniform float refractionFactor = 0.0f;
+uniform float refractionIndex = 1.52f;
 uniform samplerCube skyboxTexture;
 //camera
 uniform vec3 cameraPosition;
@@ -57,6 +58,12 @@ float LinearizeDepth(float depth)
 
 void main()
 {
+    if(bStencil)
+    {
+        FragColor = vec4(stencilColor, 1.0f);
+        return;
+    }
+
     vec3 normal = normalize(inFrag.fragNormal);
     //light
     vec3 lightDir = normalize(directionalLight);
@@ -81,7 +88,7 @@ void main()
     if(bDiffuse)
     {
         vec4 texture = texture(diffuseTexture, inFrag.fragTexcoord);
-        diffuseTextureColor = vec3(texture.rgb);
+        diffuseTextureColor = pow(texture.rgb, vec3(2.2));
         switch (type)
         {
             case 0:break;
@@ -95,8 +102,10 @@ void main()
     vec3 skyboxColor = vec3(1.0f, 1.0f, 1.0f);
     if (bSkybox)
     {
+        float ratio = 1.00 / refractionIndex;
         vec3 I = normalize(inFrag.fragPosition-cameraPosition);
-        vec3 R = reflect(I, normal);
+        //vec3 R = reflect(I, normal);
+        vec3 R = refract(I, normal, ratio);
         skyboxColor = texture(skyboxTexture, R).rgb;
     }
     //result
@@ -113,6 +122,4 @@ void main()
         float depth = LinearizeDepth(gl_FragCoord.z) / far;
         FragColor = vec4(vec3(depth), 1.0f);
     }
-    if(bStencil)
-         FragColor = vec4(stencilColor, 1.0f);
 }

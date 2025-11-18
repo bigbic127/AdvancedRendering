@@ -13,6 +13,7 @@
 #include "material.hpp"
 #include "meshComponent.hpp"
 #include "texture.hpp"
+#include "resourceManager.hpp"
 
 Editor::~Editor()
 {
@@ -205,6 +206,7 @@ void Editor::CreateMainMenuBar()
         ImGui::SetNextWindowSize(ImVec2(200, 0));
         if(ImGui::BeginMenu("보기"))
         {
+            /*
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::PushFont(nanumSquare.reqular, 13.0f);
             ImGui::SeparatorText("Display");
@@ -238,7 +240,7 @@ void Editor::CreateMainMenuBar()
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("4");
             ImGui::PopStyleColor();
-
+            */
             //Shape
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::PushFont(nanumSquare.reqular, 13.0f);
@@ -247,28 +249,60 @@ void Editor::CreateMainMenuBar()
             ImGui::PopStyleColor();
 
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Sphere", &selectedShape, 0);
+            if(ImGui::RadioButton("Sphere", &selectedShape, 0))
+            {
+                MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
+                IMesh* mesh = Context::GetContext()->resourceManager->FindMesh("sphere");
+                meshComponent->SetMesh(mesh);
+                meshComponent->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+                meshComponent->SetRotation(glm::vec3(0.0f));
+                meshComponent->SetScale(glm::vec3(2.5f));
+            }
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 1");
             ImGui::PopStyleColor();
             
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Cube", &selectedShape, 1);
+            if(ImGui::RadioButton("Cube", &selectedShape, 1))
+            {
+                MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
+                IMesh* mesh = Context::GetContext()->resourceManager->FindMesh("cube");
+                meshComponent->SetMesh(mesh);
+                meshComponent->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+                meshComponent->SetRotation(glm::vec3(0.0f));
+                meshComponent->SetScale(glm::vec3(2.0f));
+            }
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 2");
             ImGui::PopStyleColor();
 
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Cylinder", &selectedShape, 2);
+            if(ImGui::RadioButton("Cylinder", &selectedShape, 2))
+            {
+                MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
+                IMesh* mesh = Context::GetContext()->resourceManager->FindMesh("cylinder");
+                meshComponent->SetMesh(mesh);
+                meshComponent->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+                meshComponent->SetRotation(glm::vec3(0.0f));
+                meshComponent->SetScale(glm::vec3(1.0f, 2.0f, 1.0f));
+            }
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 3");
             ImGui::PopStyleColor();
 
             ImGui::SetCursorPosX(20.0f);
-            ImGui::RadioButton("Plane", &selectedShape, 3);
+            if(ImGui::RadioButton("Plane", &selectedShape, 3))
+            {
+                MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
+                IMesh* mesh = Context::GetContext()->resourceManager->FindMesh("plane");
+                meshComponent->SetMesh(mesh);
+                meshComponent->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+                meshComponent->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+                meshComponent->SetScale(glm::vec3(0.5f));
+            }
             ImGui::SameLine(120.0f, 0.0f);
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
             ImGui::Text("Ctrl + 4");

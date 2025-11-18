@@ -16,6 +16,12 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     CameraComponent* camComponent = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>();
     LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
     shader->SetMatrix4("mModel", component->GetMatrix());
+    //stencil
+    shader->SetBool("bStencil",parameter.bStencil);
+    shader->SetVector3("stencilColor",parameter.stencilColor);
+    shader->SetFloat("stencilOutline",parameter.stencilOutline);
+    if(parameter.bStencil)
+        return;
     //shader->SetMatrix4("mView", camComponent->GetViewMatrix());
     //shader->SetMatrix4("mProjection", camComponent->GetProjectionMatrix());
     shader->SetVector3("cameraPosition",camComponent->GetTransform().position);
@@ -34,28 +40,28 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     shader->SetFloat("lightIntensity",*lightComponent->GetIntensity());
     shader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));
     shader->SetVector3("lightAmbient", glm::make_vec3(lightComponent->GetAmbient()));
+    
+    int shaderIndex = 0;
     if(lightComponent->GetSkyboxTexture() != nullptr)
     {
         shader->SetBool("bSkybox", true);
         shader->SetFloat("refractionFactor", parameter.refraction);
         GLint location = shader->GetLocation("skyboxTexture");
-        glUniform1i(location, 0);
-        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(location, shaderIndex);
+        glActiveTexture(GL_TEXTURE0+shaderIndex);
+        shaderIndex += 1;
         lightComponent->GetSkyboxTexture()->Bind();
     }
-
     shader->SetVector3("directionalLight",lightComponent->GetDirection());
     if (parameter.diffuseTexture != nullptr)
     {
         shader->SetBool("bDiffuse", true);
         GLint location = shader->GetLocation("diffuseTexture");
-        glUniform1i(location, 1);
-        glActiveTexture(GL_TEXTURE1);
+        glUniform1i(location, shaderIndex);
+        glActiveTexture(GL_TEXTURE0+shaderIndex);
+        shaderIndex += 1;
         parameter.diffuseTexture->Bind();
     }
-    shader->SetBool("bStencil",parameter.bStencil);
-    shader->SetVector3("stencilColor",parameter.stencilColor);
-    shader->SetFloat("stencilOutline",parameter.stencilOutline);
 }
 
 void OpenGLMaterial::UnBind()
