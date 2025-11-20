@@ -18,7 +18,10 @@ out OutFrag
     vec3 fragPosition;
     vec3 fragNormal;
     vec2 fragTexcoord;
+    vec4 fragLightPosition;
 } outFrag;
+//light
+uniform mat4 mLightMatrix;
 
 void main()
 {
@@ -30,5 +33,6 @@ void main()
     outFrag.fragPosition = vec3(mModel * vec4(position, 1.0f));
     outFrag.fragNormal = transpose(inverse(mat3(mModel))) * vNormal;
     outFrag.fragTexcoord = vTexcoord;
+    outFrag.fragLightPosition = mLightMatrix * vec4(outFrag.fragPosition, 1.0);
     gl_Position = mProjection * mView * mModel * vec4(position, 1.0f);
 }

@@ -20,7 +20,7 @@ class SceneComponent:public IComponent
         void SetScale(glm::vec3 s){transform.scale = s;}
         const Transform& GetTransform()const{return transform;}
         float* GetRotation(){return glm::value_ptr(transform.rotation);}
-        glm::vec3 GetDirection()const;
+        glm::vec3 GetDirection();
         glm::mat4 GetMatrix();
         void Update() override;
         void Draw() override;

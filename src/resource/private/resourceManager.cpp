@@ -62,9 +62,19 @@ ResourceManager::ResourceManager()
     //create skybox shader
     const std::string skyboxvsPath = "/shader/skybox.vert";
     const std::string skyboxfsPath = "/shader/skybox.frag";
-    auto skyboxhader = std::make_unique<OpenGLShader>(skyboxvsPath, skyboxfsPath);
-    shaders.emplace("skyboxShader", std::move(skyboxhader));
-
+    auto skyboxshader = std::make_unique<OpenGLShader>(skyboxvsPath, skyboxfsPath);
+    shaders.emplace("skyboxShader", std::move(skyboxshader));
+    //create shadowmap shader
+    const std::string shadowmapvsPath = "/shader/shadowmap.vert";
+    const std::string shadowmapfsPath = "/shader/shadowmap.frag";
+    auto shadowmapshader = std::make_unique<OpenGLShader>(shadowmapvsPath, shadowmapfsPath);
+    shaders.emplace("shadowmapShader", std::move(shadowmapshader));
+    //create depthmap shader
+    const std::string depthmapvsPath = "/shader/depthmap.vert";
+    const std::string depthmapfsPath = "/shader/depthmap.frag";
+    auto depthmapshader = std::make_unique<OpenGLShader>(depthmapvsPath, depthmapfsPath);
+    shaders.emplace("depthmapShader", std::move(depthmapshader));
+    
     //create standard material
     auto standardMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     IMaterial* ptrMaterial = standardMaterial.get();

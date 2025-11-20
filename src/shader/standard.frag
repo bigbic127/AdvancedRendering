@@ -6,6 +6,7 @@ in OutFrag
     vec3 fragPosition;
     vec3 fragNormal;
     vec2 fragTexcoord;
+    vec4 fragLightPosition;
 } inFrag;
 
 //color
@@ -36,6 +37,9 @@ uniform bool bSkybox = false;
 uniform float refractionFactor = 0.0f;
 uniform float refractionIndex = 1.52f;
 uniform samplerCube skyboxTexture;
+//shadow map
+uniform bool bShadowmap = false;
+uniform sampler2D shadowmapTexture;
 //camera
 uniform vec3 cameraPosition;
 uniform float near = 0.1; 
@@ -54,6 +58,30 @@ float LinearizeDepth(float depth)
 {
     float z = depth * 2.0 - 1.0;
     return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
+float CaculationShadow(vec4 fragLightPosition, float bias=0.005f)
+{
+    vec3 projCoords = fragLightPosition.xyz / fragLightPosition.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowmapTexture, projCoords.xy).r; 
+    float currentDepth = projCoords.z;
+    //float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+    //PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowmapTexture, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowmapTexture, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+    return shadow;
 }
 
 void main()
@@ -113,7 +141,13 @@ void main()
     vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor.xyz * diffuseTextureColor;
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
     vec3 refraction = skyboxColor * refractionFactor;
-    vec3 result = ambient + diffuse + specular + refraction;
+    //vec3 result = ambient + diffuse + specular + refraction;
+
+    // calculate shadow
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float shadow = CaculationShadow(inFrag.fragLightPosition, bias);
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular + refraction));
+
     if (alpha < 0.1f && type == 1)
         discard;
     FragColor = vec4(result, alpha);

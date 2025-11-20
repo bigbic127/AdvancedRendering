@@ -6,7 +6,7 @@ struct CameraParameter
 {
     float fov = 45.0f;
     float near = 0.01f;
-    float far = 1000.0f; 
+    float far = 1000.0f;
 };
 
 class CameraComponent:public SceneComponent

@@ -26,7 +26,10 @@ class LightComponent:public SceneComponent
         float* GetColor(){return glm::value_ptr(color);}
         float* GetAmbient(){return glm::value_ptr(ambient);}
         ITexture* GetSkyboxTexture() const{return skyboxTexture;}
+        glm::mat4 GetViewMatrix() const{return view;}
+        glm::mat4 GetProjectionMatrix() const{return projection;}
         void Draw() override;
+        void Update() override;
     private:
         float lightIntensity = 1.0f;
         glm::vec3 color{1.0f};
@@ -34,6 +37,9 @@ class LightComponent:public SceneComponent
         IMesh* skyboxMesh;
         IShader* skyboxShader;
         ITexture* skyboxTexture;
+        glm::mat4 view{1.0f};
+        glm::mat4 projection{1.0f};
+        glm::vec3 targetPosition{0.0f, 0.0f, 0.0f};
 };
 
 class DirectionalLightComponent:public LightComponent

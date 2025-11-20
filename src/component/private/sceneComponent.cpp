@@ -1,12 +1,13 @@
 #include "sceneComponent.hpp"
 
-glm::vec3 SceneComponent::GetDirection()const
+glm::vec3 SceneComponent::GetDirection()
 {
     glm::mat4 rotX = glm::rotate(glm::mat4(1.0f), glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 rotY = glm::rotate(glm::mat4(1.0f), glm::radians(transform.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
     glm::mat4 rotZ = glm::rotate(glm::mat4(1.0f), glm::radians(transform.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
     glm::mat4 rotMat = rotZ * rotX * rotY;
     glm::vec3 dir = glm::vec3(rotMat * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+    SetPosition(dir*5.0f);
     return dir;
 }
 
@@ -26,10 +27,8 @@ glm::quat SceneComponent::ToQuaternion()
 
 void SceneComponent::Update()
 {
-
 }
 
 void SceneComponent::Draw()
 {
-    
 }

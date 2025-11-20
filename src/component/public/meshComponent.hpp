@@ -10,6 +10,7 @@ class MeshComponent:public SceneComponent
         void SetMesh(IMesh* mesh){this->mesh = mesh;}
         void SetMaterial(IMaterial* mat){material = mat;}
         IMaterial* GetMaterial()const{return material;}
+        IMesh* GetMesh() const{return mesh;}
         void Draw() override;
     private:
         IMesh* mesh;

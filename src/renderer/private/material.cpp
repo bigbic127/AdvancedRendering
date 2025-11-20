@@ -5,6 +5,8 @@
 #include "meshComponent.hpp"
 #include "lightComponent.hpp"
 #include "texture.hpp"
+#include "renderer.hpp"
+#include <iostream>
 
 void OpenGLMaterial::Bind()
 {
@@ -15,6 +17,7 @@ void OpenGLMaterial::Draw(MeshComponent* component)
 {
     CameraComponent* camComponent = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>();
     LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
+    OpenGLRenderer* renderer = static_cast<OpenGLRenderer*>(Context::GetContext()->renderer);
     shader->SetMatrix4("mModel", component->GetMatrix());
     //stencil
     shader->SetBool("bStencil",parameter.bStencil);
@@ -41,7 +44,7 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     shader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));
     shader->SetVector3("lightAmbient", glm::make_vec3(lightComponent->GetAmbient()));
     
-    int shaderIndex = 0;
+    GLint shaderIndex = 0;
     if(lightComponent->GetSkyboxTexture() != nullptr)
     {
         shader->SetBool("bSkybox", true);
@@ -49,8 +52,8 @@ void OpenGLMaterial::Draw(MeshComponent* component)
         GLint location = shader->GetLocation("skyboxTexture");
         glUniform1i(location, shaderIndex);
         glActiveTexture(GL_TEXTURE0+shaderIndex);
-        shaderIndex += 1;
         lightComponent->GetSkyboxTexture()->Bind();
+        shaderIndex ++;
     }
     shader->SetVector3("directionalLight",lightComponent->GetDirection());
     if (parameter.diffuseTexture != nullptr)
@@ -59,9 +62,17 @@ void OpenGLMaterial::Draw(MeshComponent* component)
         GLint location = shader->GetLocation("diffuseTexture");
         glUniform1i(location, shaderIndex);
         glActiveTexture(GL_TEXTURE0+shaderIndex);
-        shaderIndex += 1;
         parameter.diffuseTexture->Bind();
+        shaderIndex ++;
     }
+    //shadowMap
+    GLint location = shader->GetLocation("shadowmapTexture");
+    glm::mat4 lightView = lightComponent->GetViewMatrix();
+    glm::mat4 lightProjection = lightComponent->GetProjectionMatrix();
+    shader->SetMatrix4("mLightMatrix", lightProjection*lightView);
+    glUniform1i(location, shaderIndex);
+    glActiveTexture(GL_TEXTURE0+shaderIndex);
+    glBindTexture(GL_TEXTURE_2D, renderer->GetShadowBuffer());
 }
 
 void OpenGLMaterial::UnBind()
@@ -78,6 +89,7 @@ void OpenGLMaterial::UnBind()
         shader->SetBool("bSkybox", false);
         lightComponent->GetSkyboxTexture()->UnBind();
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
     shader->EndProgam();
 }
 

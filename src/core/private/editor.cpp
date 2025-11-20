@@ -1,4 +1,5 @@
-#include "folderPath.hpp"
+#include "cameraComponent.hpp"
+#include "folderPath.hpp"//Camera Compoenent가 아래로 올 때 빌드 오류
 #include "glad/glad.h"
 #include "editor.hpp"
 #include <imgui.h>
@@ -8,12 +9,12 @@
 #include <string>
 #include "context.hpp"
 #include "world.hpp"
-#include "lightComponent.hpp"
 #include "renderer.hpp"
 #include "material.hpp"
-#include "meshComponent.hpp"
 #include "texture.hpp"
 #include "resourceManager.hpp"
+#include "meshComponent.hpp"
+#include "lightComponent.hpp"
 
 Editor::~Editor()
 {
@@ -407,7 +408,7 @@ void Editor::CreateRightPanel()
                 ImGui::SetCursorPosX(40.0f);
                 ImGui::Text("Rotation");
                 ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat3("##rotationfoat3", lightComponent->GetRotation(), 1.0f, -360.0f, 360.0f);
+                ImGui::DragFloat2("##rotationfoat3", lightComponent->GetRotation(), 1.0f, -360.0f, 360.0f);
                 ImGui::Separator();
 
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
@@ -493,6 +494,19 @@ void Editor::CreateRightPanel()
                         }
                     }
                     ImGui::EndCombo();
+                }
+                ImGui::SetCursorPosX(40.0f);
+                if (ImGui::CollapsingHeader("Buffer Map"))
+                {
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                    ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                    ImGui::SeparatorText("shadowMap");
+                    ImGui::PopFont();
+                    ImGui::PopStyleColor();
+
+                    ImGui::SetCursorPosX(80.0f);
+                    ImGui::Image(renderer->GetShadowBuffer(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
                 }
                 ImGui::Separator();
             }

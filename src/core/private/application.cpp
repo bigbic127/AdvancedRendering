@@ -35,6 +35,8 @@ void Application::Init()
     //create Light
     actor = world->CreateActor("Light Actor");
     auto lightComponent = actor->AddComponent<DirectionalLightComponent>();
+    lightComponent->SetPosition(glm::vec3(0.0f, 5.0f, 0.0f));
+    lightComponent->SetRotation(glm::vec3(20.0f, -45.0f, 0.0f));
     world->SetCurrentLight(actor);
     //get standardMaterial
     auto itMat = resourceManager->GetMaterials().find("standardMaterial");
