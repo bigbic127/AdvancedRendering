@@ -20,6 +20,27 @@ ResourceManager::ResourceManager()
     auto mercuryTexture = std::make_unique<OpenGLTexture>(texPath);
     ITexture* ptrTexture = mercuryTexture.get();
     textures.emplace("mercury", std::move(mercuryTexture));
+    //create ganges
+    //diffuse
+    auto gangesDiffuseTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_diff_2k.png");
+    ITexture* ptrgangesDiffTexture = gangesDiffuseTexture.get();
+    textures.emplace("ganges_river_pebbles_diff_2k", std::move(gangesDiffuseTexture));
+    auto gangesroughTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_rough_2k.png");
+    ITexture* ptrgangesroughTexture = gangesroughTexture.get();
+    textures.emplace("ganges_river_pebbles_rough_2k", std::move(gangesroughTexture));
+    auto gangesnorTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_nor_gl_2k.png");
+    ITexture* ptrgangesnorTexture = gangesnorTexture.get();
+    textures.emplace("ganges_river_pebbles_nor_gl_2k", std::move(gangesnorTexture));
+    auto gangesaoTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_ao_2k.png");
+    ITexture* ptrgangesaoTexture = gangesaoTexture.get();
+    textures.emplace("ganges_river_pebbles_ao_2k", std::move(gangesaoTexture));
+    auto gangesdispTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_disp_2k.png");
+    ITexture* ptrgangesdispTexture = gangesdispTexture.get();
+    textures.emplace("ganges_river_pebbles_disp_2k", std::move(gangesdispTexture));
+    auto gangesarmTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_arm_2k.png");
+    ITexture* ptrgangesarmTexture = gangesarmTexture.get();
+    textures.emplace("ganges_river_pebbles_arm_2k", std::move(gangesarmTexture));
+
     //create grass texture
     const std::string grasstexPath = "/textures/grass.png";
     auto grassTexture = std::make_unique<OpenGLTexture>(grasstexPath);
@@ -80,7 +101,10 @@ ResourceManager::ResourceManager()
     IMaterial* ptrMaterial = standardMaterial.get();
     materials.emplace("standardMaterial", std::move(standardMaterial));
     OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(ptrMaterial);
-    mat->AddTexture(ptrTexture, 1);
+    mat->AddTexture(ptrgangesDiffTexture, 1);
+    mat->AddTexture(ptrgangesroughTexture, 2);
+    mat->AddTexture(ptrgangesarmTexture, 3);
+    mat->AddTexture(ptrgangesnorTexture, 4);
     //create planeMaterial
     auto planeMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     materials.emplace("planeMaterial", std::move(planeMaterial));

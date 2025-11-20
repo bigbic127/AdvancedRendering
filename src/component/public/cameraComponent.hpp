@@ -23,6 +23,6 @@ class CameraComponent:public SceneComponent
     private:
         glm::mat4 view{1.0f};
         glm::mat4 projection{1.0f};
-        glm::vec3 targetPosition{0.0f, 2.0f, 0.0f};
+        glm::vec3 targetPosition{0.0f, 3.0f, 0.0f};
         CameraParameter cameraParameter;
 };

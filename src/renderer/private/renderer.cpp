@@ -70,7 +70,7 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     glGenFramebuffers(1, &shadowFrameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
     //shadowMap texture
-    unsigned int shadow_width = 1024, shadow_height = 1024;
+    unsigned int shadow_width = 2048, shadow_height = 2048;
     glGenTextures(1, &shadowFrameTexture);
     glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_width, shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -147,7 +147,7 @@ void OpenGLRenderer::Draw()
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(lightComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     //Shadow map framebuffer
-    glViewport(0,0,1024,1024);
+    glViewport(0,0,2048,2048);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
     glEnable(GL_DEPTH_TEST);
     glClear(GL_DEPTH_BUFFER_BIT);

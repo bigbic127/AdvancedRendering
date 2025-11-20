@@ -300,7 +300,7 @@ void Editor::CreateMainMenuBar()
                 MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
                 IMesh* mesh = Context::GetContext()->resourceManager->FindMesh("plane");
                 meshComponent->SetMesh(mesh);
-                meshComponent->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+                meshComponent->SetPosition(glm::vec3(0.0f, 2.5f, 0.0f));
                 meshComponent->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
                 meshComponent->SetScale(glm::vec3(0.5f));
             }
@@ -396,6 +396,25 @@ void Editor::CreateRightPanel()
             //ImVec2 pos = viewport->WorkPos;
             //pos.y += 5.0f;
             //ImGui::SetCursorPosY(pos.y);
+            if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                CameraComponent* cameraComponent = Context::GetContext()->world->GetCurrentCamera()->GetComponent<CameraComponent>();
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+
+                ImGui::SeparatorText("transform");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Rotation");
+                ImGui::SameLine(120.0f, 0.0f);
+                
+                ImGui::DragFloat2("##camrotationfoat3", cameraComponent->GetRotation(), 1.0f, -360.0f, 360.0f);
+                ImGui::Separator();
+            }
+
+
             if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));

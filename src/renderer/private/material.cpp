@@ -65,6 +65,24 @@ void OpenGLMaterial::Draw(MeshComponent* component)
         parameter.diffuseTexture->Bind();
         shaderIndex ++;
     }
+    if (parameter.roughnessTextrue != nullptr)
+    {
+        shader->SetBool("bRoughness", true);
+        GLint location = shader->GetLocation("roughnessTexture");
+        glUniform1i(location, shaderIndex);
+        glActiveTexture(GL_TEXTURE0+shaderIndex);
+        parameter.roughnessTextrue->Bind();
+        shaderIndex ++;
+    }
+    if (parameter.normalTexture != nullptr)
+    {
+        shader->SetBool("bNormal", true);
+        GLint location = shader->GetLocation("normalTexture");
+        glUniform1i(location, shaderIndex);
+        glActiveTexture(GL_TEXTURE0+shaderIndex);
+        parameter.normalTexture->Bind();
+        shaderIndex ++;
+    }
     //shadowMap
     GLint location = shader->GetLocation("shadowmapTexture");
     glm::mat4 lightView = lightComponent->GetViewMatrix();
@@ -78,17 +96,10 @@ void OpenGLMaterial::Draw(MeshComponent* component)
 void OpenGLMaterial::UnBind()
 {
     LightComponent* lightComponent = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
-    if (parameter.diffuseTexture != nullptr)
-    {
-        shader->SetBool("bDiffuse", false);
-        parameter.diffuseTexture->UnBind();
-    }
-    //skybox
-    if(lightComponent->GetSkyboxTexture() != nullptr)
-    {
-        shader->SetBool("bSkybox", false);
-        lightComponent->GetSkyboxTexture()->UnBind();
-    }
+    shader->SetBool("bDiffuse", false);
+    shader->SetBool("bRoughness", false);
+    shader->SetBool("bNormal", false);
+    shader->SetBool("bSkybox", false);
     glBindTexture(GL_TEXTURE_2D, 0);
     shader->EndProgam();
 }

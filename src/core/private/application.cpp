@@ -30,7 +30,7 @@ void Application::Init()
     //create Camera
     auto actor = world->CreateActor("Camera Actor");
     auto cameraComponent = actor->AddComponent<CameraComponent>();
-    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
+    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 7.0f));
     world->SetCurrentCamera(actor);
     //create Light
     actor = world->CreateActor("Light Actor");
@@ -57,7 +57,7 @@ void Application::Init()
     {
         auto actor = world->CreateActor("Mesh Actor");
         actor->AddComponent<MeshComponent>(it->second.get(), standardMaterial);
-        actor->GetComponent<MeshComponent>()->SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+        actor->GetComponent<MeshComponent>()->SetPosition(glm::vec3(0.0f, 2.5f, 0.0f));
         actor->GetComponent<MeshComponent>()->SetScale(glm::vec3(2.5f));
         world->SetSelectedActor(actor);
     }

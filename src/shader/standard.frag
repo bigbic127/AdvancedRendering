@@ -92,8 +92,12 @@ void main()
         FragColor = vec4(stencilColor, 1.0f);
         return;
     }
-
     vec3 normal = normalize(inFrag.fragNormal);
+    if(bNormal)
+    {
+        normal = texture(normalTexture, inFrag.fragTexcoord).rgb;
+        normal = normalize(normal * 2.0f - 1.0f);
+    }
     //light
     vec3 lightDir = normalize(directionalLight);
     float lightValue = max(dot(normal, lightDir),0.0f);
@@ -141,6 +145,11 @@ void main()
     vec3 ambient =  lightColor * ambientColor * diffuseColor.xyz * diffuseTextureColor + lightAmbient;
     vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor.xyz * diffuseTextureColor;
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
+    if(bRoughness)
+    {
+        float specularvalue = texture(roughnessTexture, inFrag.fragTexcoord).r;
+        specular = specular* specularvalue;
+    }
     vec3 refraction = skyboxColor * refractionFactor;
     //vec3 result = ambient + diffuse + specular + refraction;
 
