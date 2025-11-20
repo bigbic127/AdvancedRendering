@@ -74,6 +74,15 @@ void OpenGLMaterial::Draw(MeshComponent* component)
         parameter.roughnessTextrue->Bind();
         shaderIndex ++;
     }
+    if (parameter.aoTexture != nullptr)
+    {
+        shader->SetBool("bAo", true);
+        GLint location = shader->GetLocation("aoTexture");
+        glUniform1i(location, shaderIndex);
+        glActiveTexture(GL_TEXTURE0+shaderIndex);
+        parameter.aoTexture->Bind();
+        shaderIndex ++;
+    }
     if (parameter.normalTexture != nullptr)
     {
         shader->SetBool("bNormal", true);
@@ -99,6 +108,7 @@ void OpenGLMaterial::UnBind()
     shader->SetBool("bDiffuse", false);
     shader->SetBool("bRoughness", false);
     shader->SetBool("bNormal", false);
+    shader->SetBool("bAo", false);
     shader->SetBool("bSkybox", false);
     glBindTexture(GL_TEXTURE_2D, 0);
     shader->EndProgam();
@@ -140,6 +150,15 @@ void OpenGLMaterial::AddTexture(ITexture* texture, int type)
             parameter.normalTexture = texture;
             break;
         }
+        case 5:
+        {
+            GLint location = shader->GetLocation("aoTexture");
+            glUniform1i(location, 4);
+            glActiveTexture(GL_TEXTURE3);
+            parameter.aoTexture = texture;
+            break;
+        }
+
         default:break;
     }
 }

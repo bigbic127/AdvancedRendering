@@ -105,6 +105,7 @@ ResourceManager::ResourceManager()
     mat->AddTexture(ptrgangesroughTexture, 2);
     mat->AddTexture(ptrgangesarmTexture, 3);
     mat->AddTexture(ptrgangesnorTexture, 4);
+    mat->AddTexture(ptrgangesaoTexture, 5);
     //create planeMaterial
     auto planeMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     materials.emplace("planeMaterial", std::move(planeMaterial));

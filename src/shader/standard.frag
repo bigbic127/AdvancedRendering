@@ -18,10 +18,12 @@ uniform bool bDiffuse = false;
 uniform bool bRoughness = false;
 uniform bool bMetallic = false;
 uniform bool bNormal = false;
+uniform bool bAo = false;
 uniform sampler2D diffuseTexture;
 uniform sampler2D roughnessTexture;
 uniform sampler2D metallicTexture;
 uniform sampler2D normalTexture;
+uniform sampler2D aoTexture;
 //propertices
 uniform float metallicFactor = 0.0f;
 uniform float roughnessFactor = 0.5f;
@@ -156,7 +158,13 @@ void main()
     // calculate shadow
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     float shadow = CaculationShadow(inFrag.fragLightPosition, bias);
-    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular + refraction));
+
+    float ao = 1.0f;
+    if(bAo)
+    {
+        ao = texture(aoTexture, inFrag.fragTexcoord).r;
+    }
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular + refraction) * ao);
 
     if (alpha < 0.1f && type == 1)
         discard;

@@ -27,6 +27,7 @@ struct MaterialParameter
     ITexture* roughnessTextrue = nullptr;
     ITexture* metallicTexture = nullptr;
     ITexture* normalTexture = nullptr;
+    ITexture* aoTexture = nullptr;
     //properties
     float metallicFactor = 0.0f;
     float roughnessFactor = 0.5f;
