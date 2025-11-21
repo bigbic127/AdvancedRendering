@@ -118,32 +118,55 @@ class ShpereMesh:public OpenGLMesh
                     float phi = lon * 2.0f * PI / slices; // 경도 각도
                     float sinPhi = sin(phi);
                     float cosPhi = cos(phi);
-
-                    // ---- 위치 ----
                     glm::vec3 position(
                         radius * sinTheta * cosPhi,
                         radius * cosTheta,
                         radius * sinTheta * sinPhi
                     );
-
-                    // ---- 법선 ---- (정규화된 방향 벡터)
-                    glm::vec3 normal = glm::normalize(glm::vec3(
-                        sinTheta * cosPhi,
-                        cosTheta,
-                        sinTheta * sinPhi
-                    ));
-
-                    // ---- 텍스처 좌표 ----
-                    float u = static_cast<float>(lon) / slices;
+                    glm::vec3 normal = glm::normalize(position);
+                    float u = 1.0f - static_cast<float>(lon) / slices;
                     float v = static_cast<float>(lat) / stacks;
-
                     Vertex vertex;
                     vertex.position = position;
                     vertex.normal = normal;
                     vertex.texcoord = glm::vec2(u, v);
-
+                    vertex.tangent = glm::vec3(0.0f);
+                    vertex.bitangent = glm::vec3(0.0f);
                     vertices.push_back(vertex);
                 }
+            }
+
+            std::vector<unsigned int> indices = CreateIndices(stacks, slices);
+            for (size_t i = 0; i < indices.size(); i += 3)
+            {
+                Vertex& v0 = vertices[indices[i]];
+                Vertex& v1 = vertices[indices[i + 1]];
+                Vertex& v2 = vertices[indices[i + 2]];
+                glm::vec3 p0 = v0.position;
+                glm::vec3 p1 = v1.position;
+                glm::vec3 p2 = v2.position;
+                glm::vec2 uv0 = v0.texcoord;
+                glm::vec2 uv1 = v1.texcoord;
+                glm::vec2 uv2 = v2.texcoord;
+                glm::vec3 edge1 = p1 - p0;
+                glm::vec3 edge2 = p2 - p0;
+                glm::vec2 dUV1 = uv1 - uv0;
+                glm::vec2 dUV2 = uv2 - uv0;
+                float f = 1.0f / (dUV1.x * dUV2.y - dUV2.x * dUV1.y);
+                glm::vec3 tangent;
+                tangent.x = f * (dUV2.y * edge1.x - dUV1.y * edge2.x);
+                tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
+                tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
+                glm::vec3 bitangent;
+                bitangent.x = f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
+                bitangent.y = f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
+                bitangent.z = f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
+                v0.tangent += tangent;
+                v1.tangent += tangent;
+                v2.tangent += tangent;
+                v0.bitangent += bitangent;
+                v1.bitangent += bitangent;
+                v2.bitangent += bitangent;
             }
             return vertices;
         }
@@ -161,6 +184,7 @@ class ShpereMesh:public OpenGLMesh
                     indices.push_back(current);
                     indices.push_back(current + 1);
                     indices.push_back(next);
+
                     indices.push_back(current + 1);
                     indices.push_back(next + 1);
                     indices.push_back(next);

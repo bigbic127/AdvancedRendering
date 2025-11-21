@@ -7,6 +7,10 @@ in OutFrag
     vec3 fragNormal;
     vec2 fragTexcoord;
     vec4 fragLightPosition;
+    vec3 fragTangentLightPosition;
+    vec3 fragTangentCameraPosition;
+    vec3 fragTangentPosition;
+    mat3 TBN;
 } inFrag;
 
 //color
@@ -95,25 +99,28 @@ void main()
         return;
     }
     vec3 normal = normalize(inFrag.fragNormal);
+    vec3 lightDir = normalize(directionalLight);
+    vec3 viewDir = normalize(cameraPosition - inFrag.fragPosition);
     if(bNormal)
     {
         normal = texture(normalTexture, inFrag.fragTexcoord).rgb;
         normal = normalize(normal * 2.0f - 1.0f);
+
+        lightDir = normalize(inFrag.TBN * directionalLight);
+        viewDir = normalize(inFrag.fragTangentCameraPosition - inFrag.fragTangentPosition);
     }
     //light
-    vec3 lightDir = normalize(directionalLight);
     float lightValue = max(dot(normal, lightDir),0.0f);
     //specular
-    vec3 specularDir = normalize(cameraPosition - inFrag.fragPosition);
     float reflectValue = 0.0f;
     if(shader == 0)//blinn
     {
-        vec3 halfwayDir = normalize(lightDir + specularDir); 
+        vec3 halfwayDir = normalize(lightDir + viewDir); 
         reflectValue = pow(max(dot(normal, halfwayDir),0.0f), specularShininess);
     }else
     {
         vec3 reflectDir = reflect(-lightDir, normal);
-        reflectValue = pow(max(dot(specularDir, reflectDir),0.0f), specularShininess);
+        reflectValue = pow(max(dot(viewDir, reflectDir),0.0f), specularShininess);
     }
     //diffuse
     vec3 diffuseTextureColor = vec3(1.0f, 1.0f, 1.0f);
@@ -128,7 +135,7 @@ void main()
         {
             case 0:break;
             case 1:
-            alpha *= texture.a;
+                alpha *= texture.a;
             break;
             default: break;
         }

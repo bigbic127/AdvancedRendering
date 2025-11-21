@@ -20,6 +20,7 @@ ResourceManager::ResourceManager()
     auto mercuryTexture = std::make_unique<OpenGLTexture>(texPath);
     ITexture* ptrTexture = mercuryTexture.get();
     textures.emplace("mercury", std::move(mercuryTexture));
+    
     //create ganges
     //diffuse
     auto gangesDiffuseTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_diff_2k.png");

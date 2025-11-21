@@ -30,13 +30,14 @@ void Application::Init()
     //create Camera
     auto actor = world->CreateActor("Camera Actor");
     auto cameraComponent = actor->AddComponent<CameraComponent>();
-    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 7.0f));
+    cameraComponent->SetPosition(glm::vec3(0.0f, 5.0f, 10.0f));
     world->SetCurrentCamera(actor);
     //create Light
     actor = world->CreateActor("Light Actor");
     auto lightComponent = actor->AddComponent<DirectionalLightComponent>();
     lightComponent->SetPosition(glm::vec3(0.0f, 5.0f, 0.0f));
-    lightComponent->SetRotation(glm::vec3(20.0f, -45.0f, 0.0f));
+    lightComponent->SetRotation(glm::vec3(35.0f, -40.0f, 0.0f));
+    lightComponent->SetIntensity(2.5f);
     world->SetCurrentLight(actor);
     //get standardMaterial
     auto itMat = resourceManager->GetMaterials().find("standardMaterial");
