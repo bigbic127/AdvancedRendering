@@ -112,11 +112,12 @@ ResourceManager::ResourceManager()
     IMaterial* ptrMaterial = standardMaterial.get();
     materials.emplace("standardMaterial", std::move(standardMaterial));
     OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(ptrMaterial);
-    mat->AddTexture(ptrgangesDiffTexture, 1);
+    mat->AddTexture(ptrbrickDiffTexture, 1);
     mat->AddTexture(ptrgangesroughTexture, 2);
     mat->AddTexture(ptrgangesarmTexture, 3);
     mat->AddTexture(ptrgangesnorTexture, 4);
     mat->AddTexture(ptrgangesaoTexture, 5);
+    mat->AddTexture(ptrgangesdispTexture, 6);
     //create planeMaterial
     auto planeMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     materials.emplace("planeMaterial", std::move(planeMaterial));

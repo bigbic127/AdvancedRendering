@@ -25,11 +25,13 @@ uniform bool bRoughness = false;
 uniform bool bMetallic = false;
 uniform bool bNormal = false;
 uniform bool bAo = false;
+uniform bool bDisp = false;
 uniform sampler2D diffuseTexture;
 uniform sampler2D roughnessTexture;
 uniform sampler2D metallicTexture;
 uniform sampler2D normalTexture;
 uniform sampler2D aoTexture;
+uniform sampler2D dispTexture;
 //propertices
 uniform float metallicFactor = 0.0f;
 uniform float roughnessFactor = 0.5f;
@@ -97,8 +99,8 @@ float CaculationShadow(vec4 fragLightPosition, float bias=0.005f)
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
-    const float minLayers = 8;
-    const float maxLayers = 32;
+    const float minLayers = 256;
+    const float maxLayers = 512;
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
@@ -109,21 +111,21 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     vec2 deltaTexCoords = P / numLayers;
   
     vec2  currentTexCoords = texCoords;
-    float currentDepthMapValue = texture(normalTexture, currentTexCoords).b;
+    float currentDepthMapValue = texture(dispTexture, currentTexCoords).r;
       
     while(currentLayerDepth < currentDepthMapValue)
     {
         // shift texture coordinates along direction of P
         currentTexCoords += deltaTexCoords;
         // get depthmap value at current texture coordinates
-        currentDepthMapValue = texture(normalTexture, currentTexCoords).b;  
+        currentDepthMapValue = texture(dispTexture, currentTexCoords).r;  
         // get depth of next layer
         currentLayerDepth += layerDepth;  
     }    
     vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
     // get depth after and before collision for linear interpolation
     float afterDepth  = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = texture(normalTexture, prevTexCoords).b - currentLayerDepth + layerDepth;
+    float beforeDepth = texture(dispTexture, prevTexCoords).r - currentLayerDepth + layerDepth;
     // interpolation of texture coordinates
     float weight = afterDepth / (afterDepth - beforeDepth);
     vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
@@ -141,13 +143,20 @@ void main()
     vec3 lightDir = normalize(directionalLight);
     vec3 viewDir = normalize(cameraPosition - inFrag.fragPosition);
     vec2 fragTexcoord = inFrag.fragTexcoord;
+    //disp
+    if(bDisp)
+    {
+        viewDir = normalize(inTangent.fragTangentCameraPosition - inTangent.fragTangentPosition);
+        fragTexcoord = ParallaxMapping(fragTexcoord, viewDir);
+        if(fragTexcoord.x > 1.0 || fragTexcoord.y > 1.0 || fragTexcoord.x < 0.0 || fragTexcoord.y < 0.0)
+            discard;
+    }
     //normal
     if(bNormal)
     {
         lightDir = normalize(inTangent.fragTangentDirection);
         viewDir = normalize(inTangent.fragTangentCameraPosition - inTangent.fragTangentPosition);
         //parallax
-        fragTexcoord = ParallaxMapping(fragTexcoord, viewDir);
         normal = texture(normalTexture, fragTexcoord).rgb;
         normal = normalize(normal * 2.0f - 1.0f);
     }

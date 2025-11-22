@@ -50,10 +50,8 @@ void main()
     //normal Tangent Space
     mat3 normalMatrix = transpose(inverse(mat3(mModel)));
     vec3 N = normalize(normalMatrix * vNormal);
-    vec3 T = normalize(normalMatrix * vTangent);
-    vec3 B = normalize(normalMatrix * vBitangent);
-    //vec3 T = normalize(mat3(mModel) * vTangent);
-    //vec3 B = normalize(cross(N, T));
+    vec3 T = normalize(mat3(mModel) * vTangent);
+    vec3 B = normalize(cross(N, T));
     mat3 TBN = transpose(mat3(T, B, N));
     outTangent.fragTangentLightPosition = TBN * lightPosition;
     outTangent.fragTangentCameraPosition  = TBN * cameraPosition;

@@ -76,13 +76,23 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     }
     if (parameter.aoTexture != nullptr)
     {
-        shader->SetFloat("heightScale", parameter.heightScale);
         shader->SetBool("bAo", true);
         GLint location = shader->GetLocation("aoTexture");
         glUniform1i(location, shaderIndex);
         glActiveTexture(GL_TEXTURE0+shaderIndex);
         parameter.aoTexture->Bind();
         shaderIndex ++;
+    }
+    if (parameter.dispTexture != nullptr)
+    {
+        shader->SetFloat("heightScale", parameter.heightScale);
+        shader->SetBool("bDisp", true);
+        GLint location = shader->GetLocation("dispTexture");
+        glUniform1i(location, shaderIndex);
+        glActiveTexture(GL_TEXTURE0+shaderIndex);
+        parameter.dispTexture->Bind();
+        shaderIndex ++;
+
     }
     if (parameter.normalTexture != nullptr)
     {
@@ -110,6 +120,7 @@ void OpenGLMaterial::UnBind()
     shader->SetBool("bRoughness", false);
     shader->SetBool("bNormal", false);
     shader->SetBool("bAo", false);
+    shader->SetBool("bDisp", false);
     shader->SetBool("bSkybox", false);
     glBindTexture(GL_TEXTURE_2D, 0);
     shader->EndProgam();
@@ -157,6 +168,14 @@ void OpenGLMaterial::AddTexture(ITexture* texture, int type)
             glUniform1i(location, 4);
             glActiveTexture(GL_TEXTURE3);
             parameter.aoTexture = texture;
+            break;
+        }
+        case 6:
+        {
+            GLint location = shader->GetLocation("dispTexture");
+            glUniform1i(location, 5);
+            glActiveTexture(GL_TEXTURE4);
+            parameter.dispTexture = texture;
             break;
         }
 
