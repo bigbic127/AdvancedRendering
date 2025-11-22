@@ -74,6 +74,39 @@ class CubeMesh:public OpenGLMesh
                 {{ 1.0f, -1.0f,  1.0f},{0.0f, -1.0f,  0.0f},{0.0f, 0.0f}},
                 {{ 1.0f, -1.0f, -1.0f},{0.0f, -1.0f,  0.0f},{0.0f, 1.0f}}
             };
+
+            std::vector<unsigned int> indices = CreateIndices();
+            for (size_t i = 0; i < indices.size(); i += 3)
+            {
+                Vertex& v0 = vertices[indices[i]];
+                Vertex& v1 = vertices[indices[i + 1]];
+                Vertex& v2 = vertices[indices[i + 2]];
+                glm::vec3 p0 = v0.position;
+                glm::vec3 p1 = v1.position;
+                glm::vec3 p2 = v2.position;
+                glm::vec2 uv0 = v0.texcoord;
+                glm::vec2 uv1 = v1.texcoord;
+                glm::vec2 uv2 = v2.texcoord;
+                glm::vec3 edge1 = p1 - p0;
+                glm::vec3 edge2 = p2 - p0;
+                glm::vec2 dUV1 = uv1 - uv0;
+                glm::vec2 dUV2 = uv2 - uv0;
+                float f = 1.0f / (dUV1.x * dUV2.y - dUV2.x * dUV1.y);
+                glm::vec3 tangent;
+                tangent.x = f * (dUV2.y * edge1.x - dUV1.y * edge2.x);
+                tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
+                tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
+                glm::vec3 bitangent;
+                bitangent.x = 1.0f - f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
+                bitangent.y = 1.0f - f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
+                bitangent.z = 1.0f - f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
+                v0.tangent += tangent;
+                v1.tangent += tangent;
+                v2.tangent += tangent;
+                v0.bitangent += bitangent;
+                v1.bitangent += bitangent;
+                v2.bitangent += bitangent;
+            }
             return vertices;
         }
         static std::vector<unsigned int> CreateIndices()
@@ -135,7 +168,6 @@ class ShpereMesh:public OpenGLMesh
                     vertices.push_back(vertex);
                 }
             }
-
             std::vector<unsigned int> indices = CreateIndices(stacks, slices);
             for (size_t i = 0; i < indices.size(); i += 3)
             {
@@ -158,9 +190,9 @@ class ShpereMesh:public OpenGLMesh
                 tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
                 tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
                 glm::vec3 bitangent;
-                bitangent.x = f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
-                bitangent.y = f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
-                bitangent.z = f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
+                bitangent.x = 1.0f - f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
+                bitangent.y = 1.0f - f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
+                bitangent.z = 1.0f - f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
                 v0.tangent += tangent;
                 v1.tangent += tangent;
                 v2.tangent += tangent;
@@ -221,6 +253,38 @@ class ConeMesh:public OpenGLMesh
             vertices.push_back({apex, glm::vec3(0, 1, 0), glm::vec2(0.5f, 0)});
             vertices.push_back({baseCenter, glm::vec3(0, -1, 0), glm::vec2(0.5f, 0.5f)});
 
+            std::vector<unsigned int> indices = CreateIndices(slices);
+            for (size_t i = 0; i < indices.size(); i += 3)
+            {
+                Vertex& v0 = vertices[indices[i]];
+                Vertex& v1 = vertices[indices[i + 1]];
+                Vertex& v2 = vertices[indices[i + 2]];
+                glm::vec3 p0 = v0.position;
+                glm::vec3 p1 = v1.position;
+                glm::vec3 p2 = v2.position;
+                glm::vec2 uv0 = v0.texcoord;
+                glm::vec2 uv1 = v1.texcoord;
+                glm::vec2 uv2 = v2.texcoord;
+                glm::vec3 edge1 = p1 - p0;
+                glm::vec3 edge2 = p2 - p0;
+                glm::vec2 dUV1 = uv1 - uv0;
+                glm::vec2 dUV2 = uv2 - uv0;
+                float f = 1.0f / (dUV1.x * dUV2.y - dUV2.x * dUV1.y);
+                glm::vec3 tangent;
+                tangent.x = f * (dUV2.y * edge1.x - dUV1.y * edge2.x);
+                tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
+                tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
+                glm::vec3 bitangent;
+                bitangent.x = 1.0f - f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
+                bitangent.y = 1.0f - f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
+                bitangent.z = 1.0f - f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
+                v0.tangent += tangent;
+                v1.tangent += tangent;
+                v2.tangent += tangent;
+                v0.bitangent += bitangent;
+                v1.bitangent += bitangent;
+                v2.bitangent += bitangent;
+            }
             return vertices;        
         }
         static std::vector<unsigned int> CreateIndices(int slices)
@@ -294,6 +358,39 @@ class CylinderMesh:public OpenGLMesh
             }
             vertices.push_back({ glm::vec3(0, -halfHeight, 0), bottomNormal, glm::vec2(0.5f, 0.5f) });
             int bottomCenterIndex = static_cast<int>(vertices.size()) - 1;
+            
+            std::vector<unsigned int> indices = CreateIndices(slices);
+            for (size_t i = 0; i < indices.size(); i += 3)
+            {
+                Vertex& v0 = vertices[indices[i]];
+                Vertex& v1 = vertices[indices[i + 1]];
+                Vertex& v2 = vertices[indices[i + 2]];
+                glm::vec3 p0 = v0.position;
+                glm::vec3 p1 = v1.position;
+                glm::vec3 p2 = v2.position;
+                glm::vec2 uv0 = v0.texcoord;
+                glm::vec2 uv1 = v1.texcoord;
+                glm::vec2 uv2 = v2.texcoord;
+                glm::vec3 edge1 = p1 - p0;
+                glm::vec3 edge2 = p2 - p0;
+                glm::vec2 dUV1 = uv1 - uv0;
+                glm::vec2 dUV2 = uv2 - uv0;
+                float f = 1.0f / (dUV1.x * dUV2.y - dUV2.x * dUV1.y);
+                glm::vec3 tangent;
+                tangent.x = f * (dUV2.y * edge1.x - dUV1.y * edge2.x);
+                tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
+                tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
+                glm::vec3 bitangent;
+                bitangent.x = 1.0f - f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
+                bitangent.y = 1.0f - f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
+                bitangent.z = 1.0f - f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
+                v0.tangent += tangent;
+                v1.tangent += tangent;
+                v2.tangent += tangent;
+                v0.bitangent += bitangent;
+                v1.bitangent += bitangent;
+                v2.bitangent += bitangent;
+            }
             return vertices;
         }
 
@@ -346,12 +443,13 @@ class PlaneMesh:public OpenGLMesh
     private:
         static std::vector<Vertex> CreatePlaneVertices(float size)
         {
+            Vertex vertex;
             float s = size * 0.5f;
             return {
-                {{-s, 0, -s}, {0, 1, 0}, {0, 0}},
-                {{ s, 0, -s}, {0, 1, 0}, {1, 0}},
-                {{ s, 0,  s}, {0, 1, 0}, {1, 1}},
-                {{-s, 0,  s}, {0, 1, 0}, {0, 1}},
+                {{-s, 0, -s}, {0, 1, 0}, {0, 0}, {1,0,0}, {0,0,1}},
+                {{ s, 0, -s}, {0, 1, 0}, {1, 0}, {1,0,0}, {0,0,1}},
+                {{ s, 0,  s}, {0, 1, 0}, {1, 1}, {1,0,0}, {0,0,1}},
+                {{-s, 0,  s}, {0, 1, 0}, {0, 1}, {1,0,0}, {0,0,1}},
             };
         }
         static std::vector<unsigned int> CreatePlaneIndices()

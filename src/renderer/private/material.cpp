@@ -76,6 +76,7 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     }
     if (parameter.aoTexture != nullptr)
     {
+        shader->SetFloat("heightScale", parameter.heightScale);
         shader->SetBool("bAo", true);
         GLint location = shader->GetLocation("aoTexture");
         glUniform1i(location, shaderIndex);

@@ -41,6 +41,16 @@ ResourceManager::ResourceManager()
     auto gangesarmTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_arm_2k.png");
     ITexture* ptrgangesarmTexture = gangesarmTexture.get();
     textures.emplace("ganges_river_pebbles_arm_2k", std::move(gangesarmTexture));
+    //create bilck
+    auto brickDiffuseTexture = std::make_unique<OpenGLTexture>("/textures/bricks2.jpg");
+    ITexture* ptrbrickDiffTexture = brickDiffuseTexture.get();
+    textures.emplace("bricks2", std::move(brickDiffuseTexture));
+    auto bricknorTexture = std::make_unique<OpenGLTexture>("/textures/bricks2_normal.jpg");
+    ITexture* ptrbricknorTexture = bricknorTexture.get();
+    textures.emplace("bricks2_normal", std::move(bricknorTexture));
+    auto brickdisTexture = std::make_unique<OpenGLTexture>("/textures/bricks2_disp.jpg");
+    ITexture* ptrbrickdisTexture = brickdisTexture.get();
+    textures.emplace("bricks2_disp", std::move(brickdisTexture));
 
     //create grass texture
     const std::string grasstexPath = "/textures/grass.png";

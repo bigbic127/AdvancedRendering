@@ -607,6 +607,11 @@ void Editor::CreateRightPanel()
                     else
                         ImGui::ImageButton("nolTexButton", nullptr, ImVec2(64,64));
                     ImGui::EndTable();
+
+                    ImGui::SetCursorPosX(40.0f);
+                    ImGui::Text("HeightScale");
+                    ImGui::SameLine(120.0f, 0.0f);
+                    ImGui::DragFloat("##heightScale", &parameter->heightScale, 0.001f, -1.0f, 1.0f);
                 }
                 //parameter
                 if(shader_item_selected_idx != 2) //blinn phong

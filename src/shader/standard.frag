@@ -7,12 +7,14 @@ in OutFrag
     vec3 fragNormal;
     vec2 fragTexcoord;
     vec4 fragLightPosition;
+} inFrag;
+in OutTangent
+{
     vec3 fragTangentLightPosition;
     vec3 fragTangentCameraPosition;
     vec3 fragTangentPosition;
-    mat3 TBN;
-} inFrag;
-
+    vec3 fragTangentDirection;
+} inTangent;
 //color
 uniform vec3 ambientColor = vec3(0.0f);
 uniform vec4 diffuseColor = vec4(1.0f);
@@ -54,6 +56,8 @@ uniform bool bDepth = false;
 //stencil
 uniform vec3 stencilColor = vec3(0.1f, 1.0f, 0.05f);
 uniform bool bStencil = false;
+//dis
+uniform float heightScale = 0.1f;
 
 // 0:blinn 1:phong
 uniform int shader = 0;
@@ -91,6 +95,41 @@ float CaculationShadow(vec4 fragLightPosition, float bias=0.005f)
     return shadow;
 }
 
+vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
+{ 
+    const float minLayers = 8;
+    const float maxLayers = 32;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
+    // calculate the size of each layer
+    float layerDepth = 1.0 / numLayers;
+    // depth of current layer
+    float currentLayerDepth = 0.0;
+    // the amount to shift the texture coordinates per layer (from vector P)
+    vec2 P = viewDir.xy / viewDir.z * heightScale; 
+    vec2 deltaTexCoords = P / numLayers;
+  
+    vec2  currentTexCoords = texCoords;
+    float currentDepthMapValue = texture(normalTexture, currentTexCoords).b;
+      
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        // shift texture coordinates along direction of P
+        currentTexCoords += deltaTexCoords;
+        // get depthmap value at current texture coordinates
+        currentDepthMapValue = texture(normalTexture, currentTexCoords).b;  
+        // get depth of next layer
+        currentLayerDepth += layerDepth;  
+    }    
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    // get depth after and before collision for linear interpolation
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(normalTexture, prevTexCoords).b - currentLayerDepth + layerDepth;
+    // interpolation of texture coordinates
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+    return finalTexCoords;
+}
+
 void main()
 {
     if(bStencil)
@@ -101,13 +140,16 @@ void main()
     vec3 normal = normalize(inFrag.fragNormal);
     vec3 lightDir = normalize(directionalLight);
     vec3 viewDir = normalize(cameraPosition - inFrag.fragPosition);
+    vec2 fragTexcoord = inFrag.fragTexcoord;
+    //normal
     if(bNormal)
     {
-        normal = texture(normalTexture, inFrag.fragTexcoord).rgb;
+        lightDir = normalize(inTangent.fragTangentDirection);
+        viewDir = normalize(inTangent.fragTangentCameraPosition - inTangent.fragTangentPosition);
+        //parallax
+        fragTexcoord = ParallaxMapping(fragTexcoord, viewDir);
+        normal = texture(normalTexture, fragTexcoord).rgb;
         normal = normalize(normal * 2.0f - 1.0f);
-
-        lightDir = normalize(inFrag.TBN * directionalLight);
-        viewDir = normalize(inFrag.fragTangentCameraPosition - inFrag.fragTangentPosition);
     }
     //light
     float lightValue = max(dot(normal, lightDir),0.0f);
@@ -129,7 +171,7 @@ void main()
         alpha = diffuseColor.w;
     if(bDiffuse)
     {
-        vec4 texture = texture(diffuseTexture, inFrag.fragTexcoord);
+        vec4 texture = texture(diffuseTexture, fragTexcoord);
         diffuseTextureColor = pow(texture.rgb, vec3(2.2));
         switch (type)
         {
@@ -156,25 +198,22 @@ void main()
     vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
     if(bRoughness)
     {
-        float specularvalue = texture(roughnessTexture, inFrag.fragTexcoord).r;
+        float specularvalue = texture(roughnessTexture, fragTexcoord).r;
         specular = specular* specularvalue;
     }
     vec3 refraction = skyboxColor * refractionFactor;
     //vec3 result = ambient + diffuse + specular + refraction;
-
     // calculate shadow
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     float shadow = CaculationShadow(inFrag.fragLightPosition, bias);
-
+    //occlusion
     float ao = 1.0f;
     if(bAo)
-    {
-        ao = texture(aoTexture, inFrag.fragTexcoord).r;
-    }
+        ao = texture(aoTexture, fragTexcoord).r;
     vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular + refraction) * ao);
-
     if (alpha < 0.1f && type == 1)
         discard;
+    //vec3 t = vec3(normal.z);
     FragColor = vec4(result, alpha);
     if(bDepth)
     {
