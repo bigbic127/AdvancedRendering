@@ -3,7 +3,7 @@
 ResourceManager::ResourceManager()
 {
     //create StandardMesh
-    auto sphere = std::make_unique<ShpereMesh>(32,32,1.0f);
+    auto sphere = std::make_unique<ShpereMesh>(128,128,1.0f);
     auto cube = std::make_unique<CubeMesh>();
     auto coneMesh = std::make_unique<ConeMesh>(3,3.0f,1.0f);
     auto cylinderMesh = std::make_unique<CylinderMesh>(32, 2.0f, 2.0f);
@@ -112,7 +112,7 @@ ResourceManager::ResourceManager()
     IMaterial* ptrMaterial = standardMaterial.get();
     materials.emplace("standardMaterial", std::move(standardMaterial));
     OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(ptrMaterial);
-    mat->AddTexture(ptrbrickDiffTexture, 1);
+    mat->AddTexture(ptrgangesDiffTexture, 1);
     mat->AddTexture(ptrgangesroughTexture, 2);
     mat->AddTexture(ptrgangesarmTexture, 3);
     mat->AddTexture(ptrgangesnorTexture, 4);

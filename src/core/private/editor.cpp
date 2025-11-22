@@ -606,6 +606,21 @@ void Editor::CreateRightPanel()
                         ImGui::ImageButton("nolTexButton", parameter->normalTexture->GetID(), ImVec2(64,64));
                     else
                         ImGui::ImageButton("nolTexButton", nullptr, ImVec2(64,64));
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    if (parameter->aoTexture != nullptr)
+                        ImGui::ImageButton("aoTexButton", parameter->aoTexture->GetID(), ImVec2(64,64));
+                    else
+                        ImGui::ImageButton("aoTexButton", nullptr, ImVec2(64,64));
+                    ImGui::Text("Occulsion");
+                    ImGui::TableSetColumnIndex(1);
+                    if (parameter->dispTexture != nullptr)
+                        ImGui::ImageButton("dispTexButton", parameter->dispTexture->GetID(), ImVec2(64,64));
+                    else
+                        ImGui::ImageButton("dispTexButton", nullptr, ImVec2(64,64));
+                    ImGui::Text("Displacement");
+
+
                     ImGui::EndTable();
 
                     ImGui::SetCursorPosX(40.0f);

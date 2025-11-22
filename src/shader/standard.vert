@@ -34,6 +34,10 @@ uniform vec3 directionalLight = vec3(0.0f, 1.0f, 0.0f);
 //tangent space
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
+//displacement
+uniform bool bDisp = false;
+uniform sampler2D dispTexture;
+uniform float heightScale = 0.1f;
 
 void main()
 {
@@ -41,6 +45,12 @@ void main()
     if (bStencil)
     {
         position += (vNormal*stencilOutline);
+    }
+    if (bDisp)
+    {
+        float height = texture(dispTexture, vTexcoord).r;
+        float displacement = (height - 0.5f) * heightScale;
+        position += vNormal * displacement;
     }
     outFrag.fragPosition = vec3(mModel * vec4(position, 1.0f));
     outFrag.fragNormal = transpose(inverse(mat3(mModel))) * vNormal;

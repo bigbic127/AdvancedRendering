@@ -40,7 +40,7 @@ struct MaterialParameter
     glm::vec3 stencilColor{0.1f, 1.0f, 0.05f};
     float stencilOutline = 0.1f;
     //dis
-    float heightScale = 0.01f;
+    float heightScale = 0.15f;
 };
 
 class IMaterial
