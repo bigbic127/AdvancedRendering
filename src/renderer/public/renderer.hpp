@@ -47,10 +47,13 @@ class OpenGLRenderer:public IRenderer
 
     private:
         void CreateBuffer(int width, int height);
-        unsigned int fbo, rbo, cbo;//color
+        void CreateGBuffer(int width, int height);
+        unsigned int fbo, rbo, cbo;//frame&color buffer / renderbuffer
         unsigned int fbo2, cbo2;//posteffect
         unsigned int vubo;//shader uniform
         unsigned int shadowFrameBuffer, shadowFrameTexture;//shadow map
+        unsigned int gfbo;//deferred framebuffer
+        unsigned int gpos, gnor, gdiff, gspec, gref, gocc;//deferred colorbuffer
         int width, height;
         bool bStencil = false;
         std::unique_ptr<IMesh> rendererMesh;

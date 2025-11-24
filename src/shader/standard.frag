@@ -188,8 +188,8 @@ void main()
     {
         float ratio = 1.00 / refractionIndex;
         vec3 I = normalize(inFrag.fragPosition-cameraPosition);
-        //vec3 R = reflect(I, normal);
-        vec3 R = refract(I, normal, ratio);
+        vec3 R = reflect(I, normal);
+        //vec3 R = refract(I, normal, ratio); //reflect(반사), refract(굴절)
         skyboxColor = texture(skyboxTexture, R).rgb;
     }
     //result

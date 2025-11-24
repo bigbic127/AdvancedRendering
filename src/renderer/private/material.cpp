@@ -23,8 +23,8 @@ void OpenGLMaterial::Draw(MeshComponent* component)
     shader->SetBool("bStencil",parameter.bStencil);
     shader->SetVector3("stencilColor",parameter.stencilColor);
     shader->SetFloat("stencilOutline",parameter.stencilOutline);
-    if(parameter.bStencil)
-        return;
+    //if(parameter.bStencil)
+    //    return;
     //shader->SetMatrix4("mView", camComponent->GetViewMatrix());
     //shader->SetMatrix4("mProjection", camComponent->GetProjectionMatrix());
     shader->SetVector3("cameraPosition",camComponent->GetTransform().position);

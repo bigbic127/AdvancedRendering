@@ -22,7 +22,6 @@ vec3 Kernel()
         vec2( offset, -offset)  // bottom-right    
     );
     float kernel[9];
-
     switch (postEffecttype)
     {
         case 3:
@@ -54,8 +53,6 @@ vec3 Kernel()
         break;
         default:break;
     }
-
-
     vec3 sampleTex[9];
     for(int i = 0; i < 9; i++)
     {
@@ -65,6 +62,12 @@ vec3 Kernel()
     for(int i = 0; i < 9; i++)
         col += sampleTex[i] * kernel[i];
     return col;
+}
+
+vec3 ToneMapping()
+{
+    vec3 result;
+    return result;
 }
 
 void main()

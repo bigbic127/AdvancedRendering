@@ -39,6 +39,10 @@ OpenGLRenderer::~OpenGLRenderer()
     glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &rbo);
     glDeleteTextures(1, &cbo);
+    glDeleteFramebuffers(1, &fbo2);
+    glDeleteTextures(1, &cbo2);
+    glDeleteTextures(1, &shadowFrameBuffer);
+    glDeleteTextures(1, &shadowFrameTexture);
 }
 
 void OpenGLRenderer::CreateBuffer(int width, int height)
@@ -51,10 +55,10 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     //colorTexture
     glGenTextures(1, &cbo);
     glBindTexture(GL_TEXTURE_2D, cbo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA16F, width, height, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cbo, 0);
     //depth, stencill buffer
     glGenRenderbuffers(1, &rbo);
@@ -65,25 +69,6 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     //
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         Logger::ErrorMessage("Framebuffer is not complete!");
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //shadowMap framebuffer
-    glGenFramebuffers(1, &shadowFrameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
-    //shadowMap texture
-    unsigned int shadow_width = 2048, shadow_height = 2048;
-    glGenTextures(1, &shadowFrameTexture);
-    glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_width, shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowFrameTexture, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    //depth
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //post framebuffer
     glGenFramebuffers(1, &fbo2);
@@ -106,6 +91,8 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
     glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &rbo);
     glDeleteTextures(1, &cbo);
+    glDeleteFramebuffers(1, &fbo2);
+    glDeleteTextures(1, &cbo2);
     CreateBuffer(width, height);
 }
 
@@ -117,6 +104,24 @@ void OpenGLRenderer::Clear()
 
 void OpenGLRenderer::Begin()
 {
+    //shadowMap framebuffer
+    glGenFramebuffers(1, &shadowFrameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
+    //shadowMap texture
+    unsigned int shadow_width = 2048, shadow_height = 2048;
+    glGenTextures(1, &shadowFrameTexture);
+    glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_width, shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowFrameTexture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //shader uniform
     //standard
     IShader* shader = Context::GetContext()->resourceManager->FindShader("standardShader");
@@ -127,8 +132,7 @@ void OpenGLRenderer::Begin()
     shader = Context::GetContext()->resourceManager->FindShader("skyboxShader");
     shaderID = static_cast<OpenGLShader*>(shader)->GetID();
     index = glGetUniformBlockIndex(shaderID, "mCamera");
-    glUniformBlockBinding(shaderID, index, 0);
-    
+    glUniformBlockBinding(shaderID, index, 0);    
     //Shader Uniform buffers
     glGenBuffers(1, &vubo);
     glBindBuffer(GL_UNIFORM_BUFFER, vubo);
@@ -160,6 +164,20 @@ void OpenGLRenderer::Draw()
         IMesh* mesh = meshComponent->GetMesh();
         openGLShader->UseProgram();
         openGLShader->SetMatrix4("mModel", meshComponent->GetMatrix());
+        if(actor.get() == Context::GetContext()->world->GetSelectedActor())
+        {
+            OpenGLMaterial* material = static_cast<OpenGLMaterial*>(actor->GetComponent<MeshComponent>()->GetMaterial());
+            MaterialParameter* parameter = material->GetParameter();
+            if(parameter->dispTexture != nullptr)
+            {
+                openGLShader->SetBool("bDisp", true);
+                openGLShader->SetFloat("heightScale", parameter->heightScale);
+                GLint location = openGLShader->GetLocation("dispTexture");
+                glUniform1i(location, 0);
+                glActiveTexture(GL_TEXTURE0);
+                parameter->dispTexture->Bind();
+            }
+        }
         mesh->Bind();
         mesh->Draw();
         mesh->UnBind();

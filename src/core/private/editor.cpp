@@ -496,6 +496,41 @@ void Editor::CreateRightPanel()
                     }
                     ImGui::EndCombo();
                 }
+                //
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("ToneMapping");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Mode");
+                ImGui::SameLine(120.0f, 0.0f);
+                const char* toneItems[] = { "Linear", "Reinhard", "Filmic", "ACES", "Agx"};
+                static int tone_item_selected_idx = 0;
+                const char* tone_combo_preview_value = toneItems[tone_item_selected_idx];
+                if(ImGui::BeginCombo("##toneCombo", tone_combo_preview_value))
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(toneItems); n++)
+                    {
+                        const bool is_selected = (tone_item_selected_idx == n);
+                        if (ImGui::Selectable(toneItems[n], is_selected))
+                        {
+                            tone_item_selected_idx = n;
+                        }
+                        if (is_selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Exposure");
+                ImGui::SameLine(120.0f, 0.0f);
+                float a = 1.0f;
+                ImGui::DragFloat("##exposure", &a, 0.01f, 0.0, 10.0f);
+                ImGui::Separator();
+                //
                 ImGui::SetCursorPosX(40.0f);
                 if (ImGui::CollapsingHeader("Buffer Map"))
                 {
@@ -619,10 +654,7 @@ void Editor::CreateRightPanel()
                     else
                         ImGui::ImageButton("dispTexButton", nullptr, ImVec2(64,64));
                     ImGui::Text("Displacement");
-
-
                     ImGui::EndTable();
-
                     ImGui::SetCursorPosX(40.0f);
                     ImGui::Text("HeightScale");
                     ImGui::SameLine(120.0f, 0.0f);
