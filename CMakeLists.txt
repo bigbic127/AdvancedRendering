@@ -126,14 +126,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/
     )
 #assetsCopy
-set(assetDir "${CMAKE_SOURCE_DIR}/assets")
-set(assetDir_output "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
-add_custom_target(assetsCopy ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${assetDir}
-            ${assetDir_output}
-    COMMENT "Copying assets..."
-)
+#set(assetDir "${CMAKE_SOURCE_DIR}/assets")
+#set(assetDir_output "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
+#add_custom_target(assetsCopy ALL
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory
+#            ${assetDir}
+#            ${assetDir_output}
+#    COMMENT "Copying assets..."
+#)
+
 #shaderCopy
 set(SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/shader")
 set(SHADER_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>/shader")

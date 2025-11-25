@@ -24,6 +24,9 @@ class IRenderer
         virtual void Update() = 0;
         virtual unsigned int& GetColorBuffer() = 0;
         virtual unsigned int& GetShadowBuffer() = 0;
+        virtual unsigned int& GetGBufferPosition() = 0;
+        virtual unsigned int& GetGBufferNormal() = 0;
+        virtual unsigned int& GetGBufferDiffuse() = 0;
         virtual void CreateBuffer(int width, int height) = 0;
         virtual void ResizeBuffer(int width, int height) = 0;
         virtual float GetAspect()const = 0;
@@ -40,9 +43,13 @@ class OpenGLRenderer:public IRenderer
         void Update() override;
         unsigned int& GetColorBuffer() override{return cbo2;}
         unsigned int& GetShadowBuffer() override{return shadowFrameTexture;}
+        unsigned int& GetGBufferPosition() override{return gpos;}
+        unsigned int& GetGBufferNormal() override{return gnor;}
+        unsigned int& GetGBufferDiffuse() override{return gdiff;}
         void ResizeBuffer(int w, int h);
         float GetAspect()const{return float(width)/height;}
         bool* GetStencil(){return &bStencil;}
+        float* GetExposure(){return &exposure;}
         void SetEffectType(PostEffectType type){postEffect = type;}
 
     private:
@@ -52,11 +59,12 @@ class OpenGLRenderer:public IRenderer
         unsigned int fbo2, cbo2;//posteffect
         unsigned int vubo;//shader uniform
         unsigned int shadowFrameBuffer, shadowFrameTexture;//shadow map
-        unsigned int gfbo;//deferred framebuffer
-        unsigned int gpos, gnor, gdiff, gspec, gref, gocc;//deferred colorbuffer
+        unsigned int gfbo, grbo;//deferred framebuffer
+        unsigned int gpos, gnor, gdiff;//deferred colorbuffer
         int width, height;
         bool bStencil = false;
         std::unique_ptr<IMesh> rendererMesh;
         std::unique_ptr<IShader> rendererShader;
         PostEffectType postEffect = PostEffectType::None;
+        float exposure = 2.2f;
 };

@@ -1,7 +1,7 @@
 #version 430 core
-layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gDiffuseSpec;
+layout (location = 0) out vec4 gPosition;
+layout (location = 1) out vec4 gNormal;
+layout (location = 2) out vec4 gDiffuse;
 
 in OutFrag
 {
@@ -24,10 +24,11 @@ uniform sampler2D normalTexture;
 uniform sampler2D aoTexture;
 uniform sampler2D dispTexture;
 
-void main
+void main()
 {
     vec3 diffuse = vec3(1.0f);
     float specular = 0.0f;
+    vec3 normal = normalize(inFrag.FragNor);
     if(bDiffuse)
     {
         diffuse = texture(diffuseTexture, inFrag.FragTexcoord).rgb;
@@ -36,7 +37,12 @@ void main
     {
         specular = texture(roughnessTexture, inFrag.FragTexcoord).r;
     }
-    gPosition = inFrag.FragPos
-    gNormal = normal(inFrag.FragNor);
-    gDiffuseSpec = vec4(diffuse, specular);
+    if(bNormal)
+    {
+        normal = texture(normalTexture, inFrag.FragTexcoord).rgb;
+        normal = normalize(normal * 2.0f - 1.0f);
+    }
+    gPosition = vec4(inFrag.FragPos,1.0f);
+    gNormal = vec4(normal, 1.0);
+    gDiffuse = vec4(diffuse, 1.0);
 }

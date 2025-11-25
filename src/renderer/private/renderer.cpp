@@ -82,7 +82,43 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cbo2, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    CreateGBuffer(width, height);
     glViewport(0, 0, width, height);
+}
+
+void OpenGLRenderer::CreateGBuffer(int width, int height)
+{
+    glGenFramebuffers(1, &gfbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, gfbo);
+    //position
+    glGenTextures(1, &gpos);
+    glBindTexture(GL_TEXTURE_2D, gpos);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gpos, 0);
+    //normal
+    glGenTextures(1, &gnor);
+    glBindTexture(GL_TEXTURE_2D, gnor);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gnor, 0);
+    //diffuse and specular
+    glGenTextures(1, &gdiff);
+    glBindTexture(GL_TEXTURE_2D, gdiff);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gdiff, 0);
+    unsigned int attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, attachments);
+    //depth
+    glGenRenderbuffers(1, &grbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, grbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, grbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void OpenGLRenderer::ResizeBuffer(int width, int height)
@@ -168,14 +204,15 @@ void OpenGLRenderer::Draw()
         {
             OpenGLMaterial* material = static_cast<OpenGLMaterial*>(actor->GetComponent<MeshComponent>()->GetMaterial());
             MaterialParameter* parameter = material->GetParameter();
+            GLint index = 0;
             if(parameter->dispTexture != nullptr)
             {
                 openGLShader->SetBool("bDisp", true);
                 openGLShader->SetFloat("heightScale", parameter->heightScale);
-                GLint location = openGLShader->GetLocation("dispTexture");
-                glUniform1i(location, 0);
-                glActiveTexture(GL_TEXTURE0);
+                openGLShader->SetInt("dispTexture", index);
+                glActiveTexture(GL_TEXTURE0+index);
                 parameter->dispTexture->Bind();
+                index++;
             }
         }
         mesh->Bind();
@@ -184,11 +221,54 @@ void OpenGLRenderer::Draw()
         openGLShader->EndProgam();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //Shader Uniform light matrix
+    //Shader Uniform camera matrix
     glBindBuffer(GL_UNIFORM_BUFFER, vubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetViewMatrix()));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    //g-buffer frameRender
+    glViewport(0,0,width,height);
+    glBindFramebuffer(GL_FRAMEBUFFER, gfbo);
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    OpenGLShader* gbufferShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("gbufferShader"));
+    for(auto& actor :Context::GetContext()->world->GetActors())
+    {
+        MeshComponent* meshComponent = actor->GetComponent<MeshComponent>();
+        if(meshComponent == nullptr)
+            continue;
+        IMesh* mesh = meshComponent->GetMesh();
+        OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
+        MaterialParameter* parameter = material->GetParameter();
+        gbufferShader->UseProgram();
+        gbufferShader->SetMatrix4("mModel", meshComponent->GetMatrix());
+        GLint index = 0;
+        if(parameter->diffuseTexture != nullptr)
+        {
+            gbufferShader->SetBool("bDiffuse", true);
+            gbufferShader->SetInt("diffuseTexture", index);
+            glActiveTexture(GL_TEXTURE0+index);
+            parameter->diffuseTexture->Bind();
+            index++;
+        }
+        if(parameter->normalTexture != nullptr)
+        {
+            gbufferShader->SetBool("bNormal", true);
+            gbufferShader->SetInt("normalTexture", index);
+            glActiveTexture(GL_TEXTURE0+index);
+            parameter->normalTexture->Bind();
+            index++;
+        }        
+        mesh->Bind();
+        mesh->Draw();
+        mesh->UnBind();
+        gbufferShader->SetBool("bDiffuse", false);
+        gbufferShader->SetBool("bNormal", false);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        gbufferShader->EndProgam();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //frameRender
     glViewport(0,0,width,height);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -261,8 +341,11 @@ void OpenGLRenderer::Draw()
     glClear(GL_COLOR_BUFFER_BIT);
     rendererShader->UseProgram();
     rendererMesh->Bind();
-    static_cast<OpenGLShader*>(rendererShader.get())->SetInt("postEffecttype", postEffect);
-    static_cast<OpenGLShader*>(rendererShader.get())->SetInt("screenTexture", 0);
+    OpenGLShader* rendererOpenGLShader = static_cast<OpenGLShader*>(rendererShader.get());
+    rendererOpenGLShader->SetInt("postEffecttype", postEffect);
+    rendererOpenGLShader->SetFloat("exposure", exposure);
+
+    rendererOpenGLShader->SetInt("screenTexture", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cbo);
     rendererMesh->Draw();

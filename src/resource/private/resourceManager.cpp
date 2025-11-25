@@ -15,14 +15,7 @@ ResourceManager::ResourceManager()
     meshes.emplace("cylinder", std::move(cylinderMesh));
     meshes.emplace("plane", std::move(planeMesh));
     meshes.emplace("skybox", std::move(skyboxMesh));
-    //create mercury texture
-    const std::string texPath = "/textures/mercury.jpg";
-    auto mercuryTexture = std::make_unique<OpenGLTexture>(texPath);
-    ITexture* ptrTexture = mercuryTexture.get();
-    textures.emplace("mercury", std::move(mercuryTexture));
-    
-    //create ganges
-    //diffuse
+    //create ganges texture
     auto gangesDiffuseTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_diff_2k.png");
     ITexture* ptrgangesDiffTexture = gangesDiffuseTexture.get();
     textures.emplace("ganges_river_pebbles_diff_2k", std::move(gangesDiffuseTexture));
@@ -41,37 +34,6 @@ ResourceManager::ResourceManager()
     auto gangesarmTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_arm_2k.png");
     ITexture* ptrgangesarmTexture = gangesarmTexture.get();
     textures.emplace("ganges_river_pebbles_arm_2k", std::move(gangesarmTexture));
-    //create bilck
-    auto brickDiffuseTexture = std::make_unique<OpenGLTexture>("/textures/bricks2.jpg");
-    ITexture* ptrbrickDiffTexture = brickDiffuseTexture.get();
-    textures.emplace("bricks2", std::move(brickDiffuseTexture));
-    auto bricknorTexture = std::make_unique<OpenGLTexture>("/textures/bricks2_normal.jpg");
-    ITexture* ptrbricknorTexture = bricknorTexture.get();
-    textures.emplace("bricks2_normal", std::move(bricknorTexture));
-    auto brickdisTexture = std::make_unique<OpenGLTexture>("/textures/bricks2_disp.jpg");
-    ITexture* ptrbrickdisTexture = brickdisTexture.get();
-    textures.emplace("bricks2_disp", std::move(brickdisTexture));
-
-    //create grass texture
-    const std::string grasstexPath = "/textures/grass.png";
-    auto grassTexture = std::make_unique<OpenGLTexture>(grasstexPath);
-    ITexture* ptrgrassTexture = grassTexture.get();
-    textures.emplace("grass", std::move(grassTexture));
-    //create window texture
-    const std::string windowtexPath = "/textures/blending_transparent_window.png";
-    auto windowTexture = std::make_unique<OpenGLTexture>(windowtexPath);
-    ITexture* ptrwindowTexture = windowTexture.get();
-    textures.emplace("blending_transparent_window", std::move(windowTexture));
-    //create container texture
-    const std::string containerPath = "/textures/container2.png";
-    auto containerTexture = std::make_unique<OpenGLTexture>(containerPath);
-    ITexture* ptrcontainerTexture = containerTexture.get();
-    textures.emplace("container", std::move(containerTexture));
-    //create container spec texture
-    const std::string containerspecPath = "/textures/container2_specular.png";
-    auto containerspecTexture = std::make_unique<OpenGLTexture>(containerspecPath);
-    ITexture* ptrcontainerspecTexture = containerspecTexture.get();
-    textures.emplace("containerspec", std::move(containerspecTexture));
     //create skybox texture
     std::vector<std::string> skyboxPaths
                                 {
@@ -106,6 +68,16 @@ ResourceManager::ResourceManager()
     const std::string depthmapfsPath = "/shader/depthmap.frag";
     auto depthmapshader = std::make_unique<OpenGLShader>(depthmapvsPath, depthmapfsPath);
     shaders.emplace("depthmapShader", std::move(depthmapshader));
+    //create gbuffer shader
+    const std::string gbuffervsPath = "/Shader/gbuffer.vert";
+    const std::string gbufferfsPath = "/Shader/gbuffer.frag";
+    auto gbuffershader = std::make_unique<OpenGLShader>(gbuffervsPath, gbufferfsPath);
+    shaders.emplace("gbufferShader", std::move(gbuffershader));
+    //create deferred shader
+    const std::string deferredvsPath = "/Shader/deferred.vert";
+    const std::string deferredfsPath = "/Shader/deferred.frag";
+    auto deferredshader = std::make_unique<OpenGLShader>(deferredvsPath, deferredfsPath);
+    shaders.emplace("deferredShader", std::move(deferredshader));
     
     //create standard material
     auto standardMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
@@ -121,20 +93,6 @@ ResourceManager::ResourceManager()
     //create planeMaterial
     auto planeMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     materials.emplace("planeMaterial", std::move(planeMaterial));
-    //create grassMaterial
-    auto grassMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
-    IMaterial* ptrgrassMaterial = grassMaterial.get();
-    materials.emplace("grassMaterial", std::move(grassMaterial));
-    mat = static_cast<OpenGLMaterial*>(ptrgrassMaterial);
-    mat->AddTexture(ptrgrassTexture, 1);
-    mat->GetParameter()->type = MaterialType::Transparent;
-    //create windowMaterial
-    auto windowMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
-    IMaterial* ptrwindowMaterial = windowMaterial.get();
-    materials.emplace("windowMaterial", std::move(windowMaterial));
-    mat = static_cast<OpenGLMaterial*>(ptrwindowMaterial);
-    mat->AddTexture(ptrwindowTexture, 1);
-    mat->GetParameter()->type = MaterialType::Transparent;
 }
 
 IMesh* ResourceManager::FindMesh(const std::string name)

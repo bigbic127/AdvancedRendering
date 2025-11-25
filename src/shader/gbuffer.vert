@@ -17,7 +17,7 @@ out OutFrag
     vec3 FragNor;
 }outFrag;
 
-void main
+void main()
 {
     vec4 modePos = mModel * vec4(vPosition, 1.0f);
     outFrag.FragPos = modePos.xyz;

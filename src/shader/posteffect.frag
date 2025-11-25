@@ -6,6 +6,9 @@ in vec2 fragTexcoord;
 uniform sampler2D screenTexture;
 //postEffectType
 uniform int postEffecttype = 0;
+//toneMapping
+uniform float exposure = 2.2f;
+uniform int toneType = 0;
 
 const float offset = 1.0 / 300.0;
 vec3 Kernel()
@@ -93,6 +96,6 @@ void main()
     //gray
     //float average = (color.x + color.y + color.z) / 3.0;
     //color = vec3(average, average, average);
-    FragColor = vec4(pow(color,vec3(1.0/2.2)), 1.0);
+    FragColor = vec4(pow(color,vec3(1.0/exposure)), 1.0);
 
 }

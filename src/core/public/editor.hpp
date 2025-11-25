@@ -37,4 +37,5 @@ class Editor
         int selectedShape = 0;
         NanumSquare nanumSquare;
         bool bInit = false;
+        bool bG_buffer = false;
 };
