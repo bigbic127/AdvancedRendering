@@ -27,8 +27,8 @@ class IRenderer
         virtual unsigned int& GetGBufferPosition() = 0;
         virtual unsigned int& GetGBufferNormal() = 0;
         virtual unsigned int& GetGBufferDiffuse() = 0;
+        virtual unsigned int& GetGBufferRoughness() = 0;
         virtual unsigned int& GetGBufferOcclusion() = 0;
-
         virtual void CreateBuffer(int width, int height) = 0;
         virtual void ResizeBuffer(int width, int height) = 0;
         virtual float GetAspect()const = 0;
@@ -48,6 +48,7 @@ class OpenGLRenderer:public IRenderer
         unsigned int& GetGBufferPosition() override{return gpos;}
         unsigned int& GetGBufferNormal() override{return gnor;}
         unsigned int& GetGBufferDiffuse() override{return gdiff;}
+        unsigned int& GetGBufferRoughness() override{return grou;}
         unsigned int& GetGBufferOcclusion() override{return gao;}
         void ResizeBuffer(int w, int h);
         float GetAspect()const{return float(width)/height;}
@@ -64,7 +65,7 @@ class OpenGLRenderer:public IRenderer
         unsigned int vubo;//shader uniform
         unsigned int shadowFrameBuffer, shadowFrameTexture;//shadow map
         unsigned int gfbo, grbo;//deferred framebuffer
-        unsigned int gpos, gnor, gdiff, gao;//deferred colorbuffer
+        unsigned int gpos, gnor, gdiff, grou, gao;//deferred colorbuffer
         int width, height;
         bool bStencil = false;
         int bDeferred = 0;

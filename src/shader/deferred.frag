@@ -7,14 +7,19 @@ in vec2 fragTexcoord;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gDiffuse;
+uniform sampler2D gRoughness;
 uniform sampler2D gAmbientOcclusion;
 
 uniform sampler2D shadowmapTexture;
 
 uniform vec3 directionalLight;
 uniform vec3 cameraPosition;
-
 uniform mat4 mLightMatrix;
+
+//lightparameter
+uniform float lightIntensity = 1.0f;
+uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
+uniform vec3 lightAmbient = vec3(0.0f, 0.0f, 0.0f);
 
 float CaculationShadow(vec3 position, float bias=0.005f)
 {
@@ -45,6 +50,7 @@ void main()
     vec3 position = texture(gPosition, fragTexcoord).rgb;
     vec3 normal = texture(gNormal, fragTexcoord).rgb;
     vec3 diffuse = texture(gDiffuse, fragTexcoord).rgb;
+    float roughness = texture(gRoughness, fragTexcoord).r;
     float occlusion = texture(gAmbientOcclusion, fragTexcoord).r;
 
     vec3 lightDir = normalize(directionalLight);
@@ -55,9 +61,10 @@ void main()
     vec3 halfwayDir = normalize(lightDir + viewDir); 
     float reflectValue = pow(max(dot(normal, halfwayDir),0.0f), 32);
 
-    vec3 ambient =  diffuse * 0.2f;
-    diffuse = diffuse * lightValue;
-    vec3 specular = vec3(1.0f) * reflectValue;
+    vec3 ambient =  diffuse * 0.2f + lightAmbient;
+    diffuse = diffuse * lightValue * lightIntensity * lightColor;
+    vec3 specular = lightIntensity * lightColor * reflectValue * roughness;
+    
 
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     float shadow = CaculationShadow(position, bias);

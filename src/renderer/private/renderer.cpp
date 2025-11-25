@@ -47,6 +47,8 @@ OpenGLRenderer::~OpenGLRenderer()
     glDeleteTextures(1, &gpos);
     glDeleteTextures(1, &gnor);
     glDeleteTextures(1, &gdiff);
+    glDeleteTextures(1, &grou);
+    glDeleteTextures(1, &gao);
     glDeleteRenderbuffers(1, &grbo);
     glDeleteBuffers(1, &vubo);
 }
@@ -112,23 +114,30 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gnor, 0);
-    //diffuse and specular
+    //diffuse
     glGenTextures(1, &gdiff);
     glBindTexture(GL_TEXTURE_2D, gdiff);
     glTexImage2D(GL_TEXTURE_2D, 0 , GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gdiff, 0);
+    //roughness
+    glGenTextures(1, &grou);
+    glBindTexture(GL_TEXTURE_2D, grou);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, grou, 0);
     //ambient occlusion
     glGenTextures(1, &gao);
     glBindTexture(GL_TEXTURE_2D, gao);
     glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gao, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gao, 0);
     //
-    unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
-    glDrawBuffers(4, attachments);
+    unsigned int attachments[5] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
+    glDrawBuffers(5, attachments);
     //depth
     glGenRenderbuffers(1, &grbo);
     glBindRenderbuffer(GL_RENDERBUFFER, grbo);
@@ -149,6 +158,8 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
     glDeleteTextures(1, &gpos);
     glDeleteTextures(1, &gnor);
     glDeleteTextures(1, &gdiff);
+    glDeleteTextures(1, &grou);
+    glDeleteTextures(1, &gao);
     glDeleteRenderbuffers(1, &grbo);
     CreateBuffer(width, height);
 }
@@ -285,6 +296,14 @@ void OpenGLRenderer::Draw()
             parameter->diffuseTexture->Bind();
             index++;
         }
+        if(parameter->roughnessTextrue != nullptr)
+        {
+            gbufferShader->SetBool("bRoughness", true);
+            gbufferShader->SetInt("roughnessTexture", index);
+            glActiveTexture(GL_TEXTURE0+index);
+            parameter->roughnessTextrue->Bind();
+            index++;
+        }
         if(parameter->normalTexture != nullptr)
         {
             gbufferShader->SetBool("bNormal", true);
@@ -306,6 +325,7 @@ void OpenGLRenderer::Draw()
         mesh->UnBind();
         gbufferShader->SetBool("bDisp", false);
         gbufferShader->SetBool("bDiffuse", false);
+        gbufferShader->SetBool("bRoughness", false);
         gbufferShader->SetBool("bNormal", false);
         gbufferShader->SetBool("bAo", false);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -405,6 +425,8 @@ void OpenGLRenderer::Draw()
         glDisable(GL_DEPTH_TEST);
         glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
+        MaterialParameter* parameter = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial())->GetParameter();
         OpenGLShader* deferredShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("deferredShader"));
         deferredShader->UseProgram();
         glm::mat4 lightView = lightComponent->GetViewMatrix();
@@ -412,6 +434,11 @@ void OpenGLRenderer::Draw()
         deferredShader->SetMatrix4("mLightMatrix", lightProjection*lightView);
         deferredShader->SetVector3("directionalLight", lightComponent->GetTransform().position);
         deferredShader->SetVector3("cameraPosition", cameraComponent->GetTransform().position);
+        //light
+        deferredShader->SetFloat("lightIntensity",*lightComponent->GetIntensity());
+        deferredShader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));
+        deferredShader->SetVector3("lightAmbient", glm::make_vec3(lightComponent->GetAmbient()));
+        
         GLint index = 0;
         deferredShader->SetInt("gPosition", index);
         glActiveTexture(GL_TEXTURE0+index);
@@ -424,6 +451,10 @@ void OpenGLRenderer::Draw()
         deferredShader->SetInt("gDiffuse", index);
         glActiveTexture(GL_TEXTURE0+index);
         glBindTexture(GL_TEXTURE_2D, gdiff);
+        index++;
+        deferredShader->SetInt("gRoughness", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, grou);
         index++;
         deferredShader->SetInt("gAmbientOcclusion", index);
         glActiveTexture(GL_TEXTURE0+index);

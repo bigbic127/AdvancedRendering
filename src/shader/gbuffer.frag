@@ -2,7 +2,8 @@
 layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec4 gNormal;
 layout (location = 2) out vec4 gDiffuse;
-layout (location = 3) out vec4 gAmbientOcclusion;
+layout (location = 3) out vec4 gRoughness;
+layout (location = 4) out vec4 gAmbientOcclusion;
 
 in OutFrag
 {
@@ -26,7 +27,7 @@ uniform sampler2D aoTexture;
 void main()
 {
     vec3 diffuse = vec3(1.0f);
-    float specular = 0.0f;
+    float roughness = 1.0f;
     vec3 normal = normalize(inFrag.FragNor);
     float occlusion = 1.0f;
     if(bDiffuse)
@@ -36,7 +37,7 @@ void main()
     }
     if(bRoughness)
     {
-        specular = texture(roughnessTexture, inFrag.FragTexcoord).r;
+        roughness = texture(roughnessTexture, inFrag.FragTexcoord).r;
     }
     if(bNormal)
     {
@@ -51,5 +52,6 @@ void main()
     gPosition = vec4(inFrag.FragPos,1.0f);
     gNormal = vec4(normal, 1.0);
     gDiffuse = vec4(diffuse, 1.0);
-    gAmbientOcclusion = vec4(vec3(occlusion), 1.0f);
+    gRoughness = vec4(vec3(roughness,0,0), 1.0f);
+    gAmbientOcclusion = vec4(vec3(occlusion,0,0), 1.0f);
 }

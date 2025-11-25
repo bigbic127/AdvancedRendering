@@ -399,12 +399,13 @@ void Editor::CreateSceneLayout()
                 ImGuiWindowFlags_NoSavedSettings|
                 ImGuiWindowFlags_NoBackground |
                 ImGuiWindowFlags_NoDecoration);
-        if(ImGui::BeginTable("framebufferTable", 5, ImGuiTableFlags_RowBg|ImGuiTableFlags_Resizable|ImGuiTableFlags_Borders, ImVec2(780, 0)))
+        if(ImGui::BeginTable("framebufferTable", 6, ImGuiTableFlags_RowBg|ImGuiTableFlags_Resizable|ImGuiTableFlags_Borders, ImVec2(930, 0)))
         {
             ImGui::TableSetupColumn("Shadow Map", ImGuiTableColumnFlags_WidthFixed, 130.0f);
             ImGui::TableSetupColumn("Position", ImGuiTableColumnFlags_WidthFixed, 150.0f);
             ImGui::TableSetupColumn("Normal", ImGuiTableColumnFlags_WidthFixed, 150.0f);
             ImGui::TableSetupColumn("Diffuse", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+            ImGui::TableSetupColumn("Roughness", ImGuiTableColumnFlags_WidthFixed, 150.0f);
             ImGui::TableSetupColumn("Occlusion", ImGuiTableColumnFlags_WidthFixed, 150.0f);
 
             ImGui::TableHeadersRow();
@@ -418,8 +419,9 @@ void Editor::CreateSceneLayout()
             ImGui::TableSetColumnIndex(3);
             ImGui::Image(Context::GetContext()->renderer->GetGBufferDiffuse(), ImVec2(150, 128), ImVec2(0, 1), ImVec2(1, 0));
             ImGui::TableSetColumnIndex(4);
+            ImGui::Image(Context::GetContext()->renderer->GetGBufferRoughness(), ImVec2(150, 128), ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::TableSetColumnIndex(5);
             ImGui::Image(Context::GetContext()->renderer->GetGBufferOcclusion(), ImVec2(150, 128), ImVec2(0, 1), ImVec2(1, 0));
-
             ImGui::EndTable();
         }
         //ImGui::GetForegroundDrawList()->AddImage(Context::GetContext()->renderer->GetShadowBuffer(), scenePos , ImVec2(256+scenePos.x, 256+scenePos.y), ImVec2(0, 1), ImVec2(1, 0));
