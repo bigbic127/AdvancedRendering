@@ -235,7 +235,6 @@ void OpenGLRenderer::Draw()
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(lightComponent->GetViewMatrix()));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(lightComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
     //Shadow map framebuffer
     glViewport(0,0,2048,2048);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
@@ -398,10 +397,8 @@ void OpenGLRenderer::Draw()
         deferredShader->EndProgam();
         glBindTexture(GL_TEXTURE_2D, 0);
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
-        
-        LightComponent* light = Context::GetContext()->world->GetCurrentLight()->GetComponent<LightComponent>();
-        light->Draw();
+        glDepthFunc(GL_LEQUAL);        
+        lightComponent->Draw();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         finalColor = dcbo;
     }else
