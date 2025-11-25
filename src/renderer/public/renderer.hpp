@@ -43,7 +43,7 @@ class OpenGLRenderer:public IRenderer
         void Begin() override;
         void Draw() override;
         void Update() override;
-        unsigned int& GetColorBuffer() override{return cbo2;}
+        unsigned int& GetColorBuffer() override{return pcbo;}
         unsigned int& GetShadowBuffer() override{return shadowFrameTexture;}
         unsigned int& GetGBufferPosition() override{return gpos;}
         unsigned int& GetGBufferNormal() override{return gnor;}
@@ -61,11 +61,13 @@ class OpenGLRenderer:public IRenderer
         void CreateBuffer(int width, int height);
         void CreateGBuffer(int width, int height);
         unsigned int fbo, rbo, cbo;//frame&color buffer / renderbuffer
-        unsigned int fbo2, cbo2;//posteffect
+        unsigned int pfbo, pcbo;//posteffect
         unsigned int vubo;//shader uniform
         unsigned int shadowFrameBuffer, shadowFrameTexture;//shadow map
-        unsigned int gfbo, grbo;//deferred framebuffer
-        unsigned int gpos, gnor, gdiff, grou, gao;//deferred colorbuffer
+        unsigned int gfbo, gdepth;//geometry framebuffer
+        unsigned int gpos, gnor, gdiff, grou, gao;//geometry colorbuffer
+        unsigned int dfbo, dcbo; //deferred framebuffer
+        unsigned int finalColor; //finalColor
         int width, height;
         bool bStencil = false;
         int bDeferred = 0;
