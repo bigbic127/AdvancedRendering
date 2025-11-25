@@ -57,7 +57,7 @@ void main()
     outFrag.fragTexcoord = vTexcoord;
     outFrag.fragLightPosition = mLightMatrix * vec4(outFrag.fragPosition, 1.0);
 
-    //normal Tangent Space
+    //normal to Tangent Space
     mat3 normalMatrix = transpose(inverse(mat3(mModel)));
     vec3 N = normalize(normalMatrix * vNormal);
     vec3 T = normalize(mat3(mModel) * vTangent);

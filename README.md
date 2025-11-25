@@ -6,5 +6,6 @@ Lighting, PBR Material, Shadow, RayTracing 학습
 - **https://learnopengl.com/**
 
 
+## 🖼️ 샘플 렌더 결과
 
-![alt text](screenshot/image.png)
+![alt text](screenshot/imageF.png)

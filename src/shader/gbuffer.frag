@@ -2,12 +2,14 @@
 layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec4 gNormal;
 layout (location = 2) out vec4 gDiffuse;
+layout (location = 3) out vec4 gAmbientOcclusion;
 
 in OutFrag
 {
     vec3 FragPos;
     vec2 FragTexcoord;
     vec3 FragNor;
+    mat3 TBN;
 }inFrag;
 
 //texture
@@ -16,22 +18,21 @@ uniform bool bRoughness = false;
 uniform bool bMetallic = false;
 uniform bool bNormal = false;
 uniform bool bAo = false;
-uniform bool bDisp = false;
 uniform sampler2D diffuseTexture;
 uniform sampler2D roughnessTexture;
 uniform sampler2D metallicTexture;
 uniform sampler2D normalTexture;
 uniform sampler2D aoTexture;
-uniform sampler2D dispTexture;
-
 void main()
 {
     vec3 diffuse = vec3(1.0f);
     float specular = 0.0f;
     vec3 normal = normalize(inFrag.FragNor);
+    float occlusion = 1.0f;
     if(bDiffuse)
     {
         diffuse = texture(diffuseTexture, inFrag.FragTexcoord).rgb;
+        diffuse = pow(diffuse, vec3(2.2));
     }
     if(bRoughness)
     {
@@ -40,9 +41,15 @@ void main()
     if(bNormal)
     {
         normal = texture(normalTexture, inFrag.FragTexcoord).rgb;
-        normal = normalize(normal * 2.0f - 1.0f);
+        normal = normal * 2.0f - 1.0f;
+        normal = normalize(normal*inFrag.TBN);
+    }
+    if(bAo)
+    {
+        occlusion = texture(aoTexture, inFrag.FragTexcoord).r;
     }
     gPosition = vec4(inFrag.FragPos,1.0f);
     gNormal = vec4(normal, 1.0);
     gDiffuse = vec4(diffuse, 1.0);
+    gAmbientOcclusion = vec4(vec3(occlusion), 1.0f);
 }

@@ -43,6 +43,12 @@ OpenGLRenderer::~OpenGLRenderer()
     glDeleteTextures(1, &cbo2);
     glDeleteTextures(1, &shadowFrameBuffer);
     glDeleteTextures(1, &shadowFrameTexture);
+    glDeleteFramebuffers(1, &gfbo);
+    glDeleteTextures(1, &gpos);
+    glDeleteTextures(1, &gnor);
+    glDeleteTextures(1, &gdiff);
+    glDeleteRenderbuffers(1, &grbo);
+    glDeleteBuffers(1, &vubo);
 }
 
 void OpenGLRenderer::CreateBuffer(int width, int height)
@@ -96,6 +102,8 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gpos, 0);
     //normal
     glGenTextures(1, &gnor);
@@ -111,8 +119,16 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gdiff, 0);
-    unsigned int attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(3, attachments);
+    //ambient occlusion
+    glGenTextures(1, &gao);
+    glBindTexture(GL_TEXTURE_2D, gao);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gao, 0);
+    //
+    unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+    glDrawBuffers(4, attachments);
     //depth
     glGenRenderbuffers(1, &grbo);
     glBindRenderbuffer(GL_RENDERBUFFER, grbo);
@@ -129,6 +145,11 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
     glDeleteTextures(1, &cbo);
     glDeleteFramebuffers(1, &fbo2);
     glDeleteTextures(1, &cbo2);
+    glDeleteFramebuffers(1, &gfbo);
+    glDeleteTextures(1, &gpos);
+    glDeleteTextures(1, &gnor);
+    glDeleteTextures(1, &gdiff);
+    glDeleteRenderbuffers(1, &grbo);
     CreateBuffer(width, height);
 }
 
@@ -186,6 +207,7 @@ void OpenGLRenderer::Draw()
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(lightComponent->GetViewMatrix()));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(lightComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     //Shadow map framebuffer
     glViewport(0,0,2048,2048);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
@@ -221,11 +243,13 @@ void OpenGLRenderer::Draw()
         openGLShader->EndProgam();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     //Shader Uniform camera matrix
     glBindBuffer(GL_UNIFORM_BUFFER, vubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetViewMatrix()));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     //g-buffer frameRender
     glViewport(0,0,width,height);
     glBindFramebuffer(GL_FRAMEBUFFER, gfbo);
@@ -244,6 +268,15 @@ void OpenGLRenderer::Draw()
         gbufferShader->UseProgram();
         gbufferShader->SetMatrix4("mModel", meshComponent->GetMatrix());
         GLint index = 0;
+        if(parameter->dispTexture != nullptr)
+        {
+            gbufferShader->SetBool("bDisp", true);
+            gbufferShader->SetFloat("heightScale", parameter->heightScale);
+            gbufferShader->SetInt("dispTexture", index);
+            glActiveTexture(GL_TEXTURE0+index);
+            parameter->dispTexture->Bind();
+            index++;
+        }
         if(parameter->diffuseTexture != nullptr)
         {
             gbufferShader->SetBool("bDiffuse", true);
@@ -259,17 +292,28 @@ void OpenGLRenderer::Draw()
             glActiveTexture(GL_TEXTURE0+index);
             parameter->normalTexture->Bind();
             index++;
-        }        
+        }
+        if(parameter->aoTexture != nullptr)
+        {
+            gbufferShader->SetBool("bAo", true);
+            gbufferShader->SetInt("aoTexture", index);
+            glActiveTexture(GL_TEXTURE0+index);
+            parameter->aoTexture->Bind();
+            index++;
+        }
         mesh->Bind();
         mesh->Draw();
         mesh->UnBind();
+        gbufferShader->SetBool("bDisp", false);
         gbufferShader->SetBool("bDiffuse", false);
         gbufferShader->SetBool("bNormal", false);
+        gbufferShader->SetBool("bAo", false);
         glBindTexture(GL_TEXTURE_2D, 0);
         gbufferShader->EndProgam();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //frameRender
+
+    //forward frameRender
     glViewport(0,0,width,height);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glEnable(GL_DEPTH_TEST);
@@ -334,25 +378,67 @@ void OpenGLRenderer::Draw()
         glEnable(GL_DEPTH_TEST);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     //posteffect
     glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
     glDisable(GL_DEPTH_TEST);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     rendererShader->UseProgram();
-    rendererMesh->Bind();
     OpenGLShader* rendererOpenGLShader = static_cast<OpenGLShader*>(rendererShader.get());
     rendererOpenGLShader->SetInt("postEffecttype", postEffect);
     rendererOpenGLShader->SetFloat("exposure", exposure);
-
     rendererOpenGLShader->SetInt("screenTexture", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cbo);
+    rendererMesh->Bind();
     rendererMesh->Draw();
     rendererMesh->UnBind();
     rendererShader->EndProgam();
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    //deferred
+    if(bDeferred > 0)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
+        glDisable(GL_DEPTH_TEST);
+        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        OpenGLShader* deferredShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("deferredShader"));
+        deferredShader->UseProgram();
+        glm::mat4 lightView = lightComponent->GetViewMatrix();
+        glm::mat4 lightProjection = lightComponent->GetProjectionMatrix();
+        deferredShader->SetMatrix4("mLightMatrix", lightProjection*lightView);
+        deferredShader->SetVector3("directionalLight", lightComponent->GetTransform().position);
+        deferredShader->SetVector3("cameraPosition", cameraComponent->GetTransform().position);
+        GLint index = 0;
+        deferredShader->SetInt("gPosition", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gpos);
+        index++;
+        deferredShader->SetInt("gNormal", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gnor);
+        index++;
+        deferredShader->SetInt("gDiffuse", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gdiff);
+        index++;
+        deferredShader->SetInt("gAmbientOcclusion", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gao);
+        index++;
+        deferredShader->SetInt("shadowmapTexture", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
+        rendererMesh->Bind();
+        rendererMesh->Draw();
+        rendererMesh->UnBind();
+        deferredShader->EndProgam();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 }
 
 void OpenGLRenderer::Update()

@@ -1,4 +1,5 @@
 #include "sceneComponent.hpp"
+#include <iostream>
 
 glm::vec3 SceneComponent::GetDirection()
 {
