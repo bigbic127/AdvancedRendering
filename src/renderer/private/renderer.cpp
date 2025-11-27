@@ -9,6 +9,7 @@
 #include "lightComponent.hpp"
 #include "logger.hpp"
 #include "shader.hpp"
+#include <random>
 
 OpenGLRenderer::OpenGLRenderer()
 {
@@ -32,6 +33,32 @@ OpenGLRenderer::OpenGLRenderer()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
     CreateBuffer(800, 600);
+    //create ssao
+    std::uniform_real_distribution<GLfloat> randomFloats(0.0f, 1.0f);
+    std::default_random_engine generator;
+    for(size_t i = 0;i<64;++i)
+    {
+        glm::vec3 sample(randomFloats(generator)*2.0-1.0, randomFloats(generator)*2.0-1.0, randomFloats(generator));
+        sample = glm::normalize(sample);
+        sample *= randomFloats(generator);
+        float scale = float(i)/ 64.0f;
+        scale = 0.1f + (scale*scale) * (1.0f - 0.1f);
+        sample *= scale;
+        ssaoKernel.push_back(sample);
+    }
+    //create noise texture
+    for (size_t i = 0;i<16;i++)
+    {
+        glm::vec3 noise(randomFloats(generator)*2.0-1.0, randomFloats(generator)*2.0-1.0, 0.0f); // rotate around z-axis (in tangent space)
+        ssaoNoise.push_back(noise);
+    }
+    glGenTextures(1, &noiseTexture);
+    glBindTexture(GL_TEXTURE_2D, noiseTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 OpenGLRenderer::~OpenGLRenderer()
@@ -50,6 +77,10 @@ OpenGLRenderer::~OpenGLRenderer()
     glDeleteTextures(1, &grou);
     glDeleteTextures(1, &gao);
     glDeleteTextures(1, &gdepth);
+    glDeleteFramebuffers(1, &ssaofbo);
+    glDeleteTextures(1, &ssaocbo);
+    glDeleteFramebuffers(1, &ssaoblurfbo);
+    glDeleteTextures(1, &ssaoblurcbo);
     glDeleteBuffers(1, &vubo);
 }
 
@@ -91,6 +122,7 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pcbo, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     CreateGBuffer(width, height);
+    CreateSSAOBuffer(width, height);
     glViewport(0, 0, width, height);
 }
 
@@ -101,7 +133,7 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //position
     glGenTextures(1, &gpos);
     glBindTexture(GL_TEXTURE_2D, gpos);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -110,7 +142,7 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //normal
     glGenTextures(1, &gnor);
     glBindTexture(GL_TEXTURE_2D, gnor);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gnor, 0);
@@ -124,14 +156,14 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //roughness
     glGenTextures(1, &grou);
     glBindTexture(GL_TEXTURE_2D, grou);
-    glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, grou, 0);
     //ambient occlusion
     glGenTextures(1, &gao);
     glBindTexture(GL_TEXTURE_2D, gao);
-    glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gao, 0);
@@ -145,8 +177,9 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);    
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gdepth, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     //deferred framebuffer
     glGenFramebuffers(1, &dfbo);
     glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
@@ -163,6 +196,36 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void OpenGLRenderer::CreateSSAOBuffer(int width, int height)
+{
+    //ssao buffer
+    glGenFramebuffers(1, &ssaofbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, ssaofbo);
+    //texture
+    glGenTextures(1, &ssaocbo);
+    glBindTexture(GL_TEXTURE_2D, ssaocbo);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaocbo, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "SSAO Framebuffer not complete!" << std::endl;    
+    //ssao blur buffer
+    glGenFramebuffers(1, &ssaoblurfbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, ssaoblurfbo);
+    //texture
+    glGenTextures(1, &ssaoblurcbo);
+    glBindTexture(GL_TEXTURE_2D, ssaoblurcbo);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoblurcbo, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
+    glGenFramebuffers(GL_FRAMEBUFFER, 0);
+}
+
+
 void OpenGLRenderer::ResizeBuffer(int width, int height)
 {
     if(width == this->width && height == this->height) return;
@@ -178,6 +241,10 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
     glDeleteTextures(1, &grou);
     glDeleteTextures(1, &gao);
     glDeleteTextures(1, &gdepth);
+    glDeleteFramebuffers(1, &ssaofbo);
+    glDeleteTextures(1, &ssaocbo);
+    glDeleteFramebuffers(1, &ssaoblurfbo);
+    glDeleteTextures(1, &ssaoblurcbo);
     CreateBuffer(width, height);
 }
 
@@ -268,6 +335,7 @@ void OpenGLRenderer::Draw()
         mesh->Draw();
         mesh->UnBind();
         openGLShader->EndProgam();
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //Shader Uniform camera matrix
@@ -345,13 +413,69 @@ void OpenGLRenderer::Draw()
             gbufferShader->SetBool("bRoughness", false);
             gbufferShader->SetBool("bNormal", false);
             gbufferShader->SetBool("bAo", false);
-            glBindTexture(GL_TEXTURE_2D, 0);
             gbufferShader->EndProgam();
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //ssao buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaofbo);
+        glDisable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT);
+        OpenGLShader* ssaoShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("ssaoShader"));
+        //uniform
+        ssaoShader->UseProgram();
+        ssaoShader->SetMatrix4("cameraView", cameraComponent->GetViewMatrix());
+        ssaoShader->SetMatrix4("cameraProjection", cameraComponent->GetProjectionMatrix());
+        for (unsigned int i = 0; i < 64; ++i)
+            ssaoShader->SetVector3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
+        glm::vec2 screenSize(width, height);
+        ssaoShader->SetFloat("radius", ssaoRadius);
+        ssaoShader->SetFloat("bias", ssaobias);
+        ssaoShader->SetVector2("screenSize", screenSize);
+        //texture
+        GLint index = 0;
+        ssaoShader->SetInt("gPosition", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gpos);
+        index++;
+        ssaoShader->SetInt("gNormal", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gnor);
+        index++;
+        ssaoShader->SetInt("noise", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, noiseTexture);
+        rendererMesh->Bind();
+        rendererMesh->Draw();
+        rendererMesh->UnBind();
+        ssaoShader->EndProgam();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //ssao blur buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoblurfbo);
+        glDisable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT);
+        OpenGLShader* ssaoblurShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("ssaoblurShader"));
+        ssaoblurShader->UseProgram();
+        //texture
+        index = 0;
+        ssaoblurShader->SetInt("ssaoInput", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, ssaocbo);
+        index++;
+        ssaoblurShader->SetInt("gAmbientOcclusion", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, gao);
+        rendererMesh->Bind();
+        rendererMesh->Draw();
+        rendererMesh->UnBind();
+        ssaoblurShader->EndProgam();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         //deferred Render
         glBindFramebuffer(GL_FRAMEBUFFER, dfbo);
         glDisable(GL_DEPTH_TEST);
-        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
         MaterialParameter* parameter = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial())->GetParameter();
@@ -360,14 +484,19 @@ void OpenGLRenderer::Draw()
         glm::mat4 lightView = lightComponent->GetViewMatrix();
         glm::mat4 lightProjection = lightComponent->GetProjectionMatrix();
         deferredShader->SetMatrix4("mLightMatrix", lightProjection*lightView);
-        deferredShader->SetVector3("directionalLight", lightComponent->GetTransform().position);
+        deferredShader->SetVector3("directionalLight", lightComponent->GetDirection());
         deferredShader->SetVector3("cameraPosition", cameraComponent->GetTransform().position);
         //light
         deferredShader->SetFloat("lightIntensity",*lightComponent->GetIntensity());
         deferredShader->SetVector3("lightColor",glm::make_vec3(lightComponent->GetColor()));
         deferredShader->SetVector3("lightAmbient", glm::make_vec3(lightComponent->GetAmbient()));
+        //material
+        deferredShader->SetVector3("ambientColor", parameter->ambientColor);
+        deferredShader->SetVector3("diffuseColor", parameter->diffuseColor);
+        deferredShader->SetVector3("specularColor", parameter->specularColor);
+        deferredShader->SetFloat("specularShininess", parameter->specularShininess);
         //texture
-        GLint index = 0;
+        index = 0;
         deferredShader->SetInt("gPosition", index);
         glActiveTexture(GL_TEXTURE0+index);
         glBindTexture(GL_TEXTURE_2D, gpos);
@@ -386,7 +515,7 @@ void OpenGLRenderer::Draw()
         index++;
         deferredShader->SetInt("gAmbientOcclusion", index);
         glActiveTexture(GL_TEXTURE0+index);
-        glBindTexture(GL_TEXTURE_2D, gao);
+        glBindTexture(GL_TEXTURE_2D, ssaoblurcbo);
         index++;
         deferredShader->SetInt("shadowmapTexture", index);
         glActiveTexture(GL_TEXTURE0+index);
@@ -396,6 +525,7 @@ void OpenGLRenderer::Draw()
         rendererMesh->UnBind();
         deferredShader->EndProgam();
         glBindTexture(GL_TEXTURE_2D, 0);
+        //skybox forward
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);        
         lightComponent->Draw();

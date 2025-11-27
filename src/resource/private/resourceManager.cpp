@@ -73,6 +73,16 @@ ResourceManager::ResourceManager()
     const std::string gbufferfsPath = "/Shader/gbuffer.frag";
     auto gbuffershader = std::make_unique<OpenGLShader>(gbuffervsPath, gbufferfsPath);
     shaders.emplace("gbufferShader", std::move(gbuffershader));
+    //create ssao shader
+    const std::string ssaovsPath = "/Shader/ssao.vert";
+    const std::string ssaofsPath = "/Shader/ssao.frag";
+    auto ssaoshader = std::make_unique<OpenGLShader>(ssaovsPath, ssaofsPath);
+    shaders.emplace("ssaoShader", std::move(ssaoshader));
+    //create ssao blur shader
+    const std::string ssaoblurvsPath = "/Shader/ssaoblur.vert";
+    const std::string ssaoblurfsPath = "/Shader/ssaoblur.frag";
+    auto ssaoblurshader = std::make_unique<OpenGLShader>(ssaoblurvsPath, ssaoblurfsPath);
+    shaders.emplace("ssaoblurShader", std::move(ssaoblurshader));
     //create deferred shader
     const std::string deferredvsPath = "/Shader/deferred.vert";
     const std::string deferredfsPath = "/Shader/deferred.frag";

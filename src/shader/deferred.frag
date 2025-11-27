@@ -9,14 +9,18 @@ uniform sampler2D gNormal;
 uniform sampler2D gDiffuse;
 uniform sampler2D gRoughness;
 uniform sampler2D gAmbientOcclusion;
-
 uniform sampler2D shadowmapTexture;
 
 uniform vec3 directionalLight;
 uniform vec3 cameraPosition;
 uniform mat4 mLightMatrix;
 
-//lightparameter
+//material parameter
+uniform vec3 ambientColor = vec3(0.0f);
+uniform vec3 diffuseColor = vec3(1.0f);
+uniform vec3 specularColor = vec3(0.5f);
+uniform float specularShininess = 32.0f;
+//light parameter
 uniform float lightIntensity = 1.0f;
 uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
 uniform vec3 lightAmbient = vec3(0.0f, 0.0f, 0.0f);
@@ -48,7 +52,7 @@ float CaculationShadow(vec3 position, float bias=0.005f)
 void main()
 {
     vec3 position = texture(gPosition, fragTexcoord).rgb;
-    vec3 normal = texture(gNormal, fragTexcoord).rgb;
+    vec3 normal = normalize(texture(gNormal, fragTexcoord).rgb);
     vec3 diffuse = texture(gDiffuse, fragTexcoord).rgb;
     float roughness = texture(gRoughness, fragTexcoord).r;
     float occlusion = texture(gAmbientOcclusion, fragTexcoord).r;
@@ -59,19 +63,15 @@ void main()
     float lightValue = max(dot(normal, lightDir),0.0f);
     //blinn
     vec3 halfwayDir = normalize(lightDir + viewDir); 
-    float reflectValue = pow(max(dot(normal, halfwayDir),0.0f), 32);
+    float reflectValue = pow(max(dot(normal, halfwayDir),0.0f), specularShininess);
 
-    vec3 ambient =  diffuse * 0.2f + lightAmbient;
-    diffuse = diffuse * lightValue * lightIntensity * lightColor;
-    vec3 specular = lightIntensity * lightColor * reflectValue * roughness;
+    vec3 ambient = occlusion * diffuse * ambientColor + lightAmbient;
+    diffuse = diffuse * diffuseColor * lightValue * lightIntensity * lightColor;
+    vec3 specular = specularColor * lightIntensity * lightColor * reflectValue * roughness;
     
-
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     float shadow = CaculationShadow(position, bias);
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular));
 
-    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular) * occlusion);
-
-    vec3 color = result;
-
-    FragColor = vec4(color, 1.0);
+    FragColor = vec4(result, 1.0);
 }

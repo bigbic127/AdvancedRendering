@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <vector>
+#include <glm/glm.hpp>
 
 class IMesh;
 class IShader;
@@ -49,7 +51,9 @@ class OpenGLRenderer:public IRenderer
         unsigned int& GetGBufferNormal() override{return gnor;}
         unsigned int& GetGBufferDiffuse() override{return gdiff;}
         unsigned int& GetGBufferRoughness() override{return grou;}
-        unsigned int& GetGBufferOcclusion() override{return gao;}
+        unsigned int& GetGBufferOcclusion() override{return ssaoblurcbo;}
+        float* GetSSAORadius(){return &ssaoRadius;}
+        float* GetSSAOBias(){return &ssaobias;}
         void ResizeBuffer(int w, int h);
         float GetAspect()const{return float(width)/height;}
         bool* GetStencil(){return &bStencil;}
@@ -60,13 +64,15 @@ class OpenGLRenderer:public IRenderer
     private:
         void CreateBuffer(int width, int height);
         void CreateGBuffer(int width, int height);
-        unsigned int fbo, rbo, cbo;//frame&color buffer / renderbuffer
-        unsigned int pfbo, pcbo;//posteffect
+        void CreateSSAOBuffer(int width, int height);
         unsigned int vubo;//shader uniform
+        unsigned int fbo, rbo, cbo;// forward renderbuffer
         unsigned int shadowFrameBuffer, shadowFrameTexture;//shadow map
         unsigned int gfbo, gdepth;//geometry framebuffer
         unsigned int gpos, gnor, gdiff, grou, gao;//geometry colorbuffer
+        unsigned int ssaofbo, ssaocbo, ssaoblurfbo, ssaoblurcbo;//ssao, ssao blur buffer
         unsigned int dfbo, dcbo; //deferred framebuffer
+        unsigned int pfbo, pcbo;//posteffect
         unsigned int finalColor; //finalColor
         int width, height;
         bool bStencil = false;
@@ -75,4 +81,11 @@ class OpenGLRenderer:public IRenderer
         std::unique_ptr<IShader> rendererShader;
         PostEffectType postEffect = PostEffectType::None;
         float exposure = 2.2f;
+        //occlusion
+        std::vector<glm::vec3>ssaoKernel;
+        std::vector<glm::vec3> ssaoNoise;
+        unsigned int noiseTexture;
+        int kernelSize = 64;
+        float ssaoRadius = 0.5f;
+        float ssaobias = 0.025f;
 };

@@ -43,7 +43,7 @@ void main()
     {
         normal = texture(normalTexture, inFrag.FragTexcoord).rgb;
         normal = normal * 2.0f - 1.0f;
-        normal = normalize(normal*inFrag.TBN);
+        normal = normalize(inFrag.TBN * normal);
     }
     if(bAo)
     {

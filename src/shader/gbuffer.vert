@@ -29,16 +29,16 @@ void main()
         float displacement = (height - 0.5f) * heightScale;
         position += vNormal * displacement;
     }
-    vec4 modePos = mModel * vec4(position, 1.0f);
+    vec4 modelPos = mModel * vec4(position, 1.0f);
     //normal Tangent Space
     vec3 N = normalize(mat3(mModel) * vNormal);
     vec3 T = normalize(mat3(mModel) * vTangent);
     vec3 B = normalize(cross(N, T));
-    mat3 TBN = transpose(mat3(T, B, N));
+    mat3 TBN = mat3(T, B, N);
 
     outFrag.TBN = TBN;
-    outFrag.FragPos = modePos.xyz;
+    outFrag.FragPos = modelPos.xyz;
     outFrag.FragTexcoord = vTexcoord;
     outFrag.FragNor = transpose(inverse(mat3(mModel))) * vNormal;
-    gl_Position = mProjection * mView * modePos;
+    gl_Position = mProjection * mView * modelPos;
 }

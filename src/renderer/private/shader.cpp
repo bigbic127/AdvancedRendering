@@ -85,6 +85,11 @@ void OpenGLShader::SetDouble(const std::string& name, int value) const
     glUniform1d(GetLocation(name), value);
 }
 
+void OpenGLShader::SetVector2(const std::string& name, const glm::vec2& value) const
+{
+    glUniform2fv(GetLocation(name), 1, glm::value_ptr(value));
+}
+
 void OpenGLShader::SetVector3(const std::string& name, const glm::vec3& value) const
 {
     glUniform3fv(GetLocation(name), 1, glm::value_ptr(value));

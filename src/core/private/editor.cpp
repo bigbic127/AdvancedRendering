@@ -603,6 +603,22 @@ void Editor::CreateRightPanel()
                     ImGui::Text("Frame\nBuffer");
                     ImGui::SameLine(120.0f, 0.0f);
                     ImGui::Checkbox("##bufferCheck", &bG_buffer);
+                }else
+                    bG_buffer = false;
+                ImGui::Separator();
+                ImGui::SetCursorPosX(40.0f);
+                if (ImGui::CollapsingHeader("SSAO"))
+                {
+                    OpenGLRenderer* openGLrenderer = static_cast<OpenGLRenderer*>(renderer);
+                    ImGui::SetCursorPosX(80.0f);
+                    ImGui::Text("Radius");
+                    ImGui::SameLine(120.0f, 0.0f); 
+                    ImGui::DragFloat("##radios", openGLrenderer->GetSSAORadius(),0.1f, 0.0f, 100.0f);
+                    ImGui::SetCursorPosX(80.0f);
+                    ImGui::Text("Bias");
+                    ImGui::SameLine(120.0f, 0.0f); 
+                    ImGui::DragFloat("##bias", openGLrenderer->GetSSAOBias(),0.001f, 0.0f, 10.0f);
+
                 }
                 ImGui::Separator();
             }
