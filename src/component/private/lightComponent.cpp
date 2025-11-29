@@ -37,7 +37,8 @@ void LightComponent::Draw()
 
 void LightComponent::Update()
 {
-    view = glm::lookAt(transform.position, targetPosition, glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::lookAt(transform.position, targetPosition, glm::vec3(0.0f, 0.0f, -1.0f));
     float scale = 12.0f;
     projection = glm::ortho(-scale, scale, -scale, scale, 0.01f, 20.0f);
+    glm::vec3 pos = GetTransform().position;
 }

@@ -378,6 +378,9 @@ void Editor::CreateSceneLayout()
     if (sceneSize.x>0 && sceneSize.y>0)
         Context::GetContext()->renderer->ResizeBuffer((int)sceneSize.x, (int)sceneSize.y);
     ImGui::Image((void*)(intptr_t) Context::GetContext()->renderer->GetColorBuffer(), sceneSize, ImVec2(0, 1), ImVec2(1, 0));
+    //Mouse Input
+    //horvered mouse point
+    InputCameraUpdate();
     ImGui::End();
 
     //Overay Gbuffer

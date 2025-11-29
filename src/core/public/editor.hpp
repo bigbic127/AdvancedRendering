@@ -1,6 +1,7 @@
 #pragma once
 #include <GLFW/glfw3.h>
 #include <imgui.h>
+#include "input.hpp"
 
 class Context;
 
@@ -17,7 +18,7 @@ struct NanumSquare
     float size;
 };
 
-class Editor
+class Editor:public Input
 {
     public:
         ~Editor();

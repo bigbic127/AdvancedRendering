@@ -81,6 +81,8 @@ OpenGLRenderer::~OpenGLRenderer()
     glDeleteTextures(1, &ssaocbo);
     glDeleteFramebuffers(1, &ssaoblurfbo);
     glDeleteTextures(1, &ssaoblurcbo);
+    glDeleteFramebuffers(1, &dfbo);
+    glDeleteTextures(1, &dcbo);
     glDeleteBuffers(1, &vubo);
 }
 
@@ -149,21 +151,21 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //diffuse
     glGenTextures(1, &gdiff);
     glBindTexture(GL_TEXTURE_2D, gdiff);
-    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gdiff, 0);
     //roughness
     glGenTextures(1, &grou);
     glBindTexture(GL_TEXTURE_2D, grou);
-    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, grou, 0);
     //ambient occlusion
     glGenTextures(1, &gao);
     glBindTexture(GL_TEXTURE_2D, gao);
-    glTexImage2D(GL_TEXTURE_2D, 0 , GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0 , GL_R8, width, height, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gao, 0);
@@ -173,10 +175,10 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //depth
     glGenTextures(1, &gdepth);
     glBindTexture(GL_TEXTURE_2D, gdepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);    
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gdepth, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, gdepth, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -186,13 +188,13 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //colorTexture
     glGenTextures(1, &dcbo);
     glBindTexture(GL_TEXTURE_2D, dcbo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dcbo, 0);
     //depth
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gdepth, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, gdepth, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -204,7 +206,7 @@ void OpenGLRenderer::CreateSSAOBuffer(int width, int height)
     //texture
     glGenTextures(1, &ssaocbo);
     glBindTexture(GL_TEXTURE_2D, ssaocbo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaocbo, 0);
@@ -216,7 +218,7 @@ void OpenGLRenderer::CreateSSAOBuffer(int width, int height)
     //texture
     glGenTextures(1, &ssaoblurcbo);
     glBindTexture(GL_TEXTURE_2D, ssaoblurcbo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoblurcbo, 0);
@@ -245,12 +247,14 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
     glDeleteTextures(1, &ssaocbo);
     glDeleteFramebuffers(1, &ssaoblurfbo);
     glDeleteTextures(1, &ssaoblurcbo);
+    glDeleteFramebuffers(1, &dfbo);
+    glDeleteTextures(1, &dcbo);
     CreateBuffer(width, height);
 }
 
 void OpenGLRenderer::Clear()
 {
-    glClearColor(0.7f,0.7f,0.7f,1.0f);
+    glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
@@ -350,8 +354,8 @@ void OpenGLRenderer::Draw()
         glViewport(0,0,width,height);
         glBindFramebuffer(GL_FRAMEBUFFER, gfbo);
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        Clear();
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
         OpenGLShader* gbufferShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("gbufferShader"));
         for(auto& actor :Context::GetContext()->world->GetActors())
         {
@@ -405,9 +409,20 @@ void OpenGLRenderer::Draw()
                 parameter->aoTexture->Bind();
                 index++;
             }
-            mesh->Bind();
-            mesh->Draw();
-            mesh->UnBind();
+            if(actor.get() == Context::GetContext()->world->GetSelectedActor())
+            {
+                glStencilMask(0xFF);
+                mesh->Bind();
+                mesh->Draw();
+                mesh->UnBind();
+            }
+            else
+            {
+                glStencilMask(0x00);
+                mesh->Bind();
+                mesh->Draw();
+                mesh->UnBind();
+            }
             gbufferShader->SetBool("bDisp", false);
             gbufferShader->SetBool("bDiffuse", false);
             gbufferShader->SetBool("bRoughness", false);
@@ -495,6 +510,7 @@ void OpenGLRenderer::Draw()
         deferredShader->SetVector3("diffuseColor", parameter->diffuseColor);
         deferredShader->SetVector3("specularColor", parameter->specularColor);
         deferredShader->SetFloat("specularShininess", parameter->specularShininess);
+        deferredShader->SetFloat("refractionFactor", parameter->refraction);
         //texture
         index = 0;
         deferredShader->SetInt("gPosition", index);
@@ -520,6 +536,11 @@ void OpenGLRenderer::Draw()
         deferredShader->SetInt("shadowmapTexture", index);
         glActiveTexture(GL_TEXTURE0+index);
         glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
+        index++;
+        deferredShader->SetInt("skyboxTexture", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        lightComponent->GetSkyboxTexture()->Bind();
+        //mesh
         rendererMesh->Bind();
         rendererMesh->Draw();
         rendererMesh->UnBind();
@@ -527,8 +548,25 @@ void OpenGLRenderer::Draw()
         glBindTexture(GL_TEXTURE_2D, 0);
         //skybox forward
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);        
+        glDepthFunc(GL_LEQUAL);
         lightComponent->Draw();
+        //stencilRender forward
+        if (Context::GetContext()->world->GetSelectedActor() != nullptr && bStencil)
+        {
+            auto actor = Context::GetContext()->world->GetSelectedActor();
+            MeshComponent* meshComponent = actor->GetComponent<MeshComponent>();
+            OpenGLMaterial* material = static_cast<OpenGLMaterial*>(meshComponent->GetMaterial());
+            MaterialParameter* parameter =  material->GetParameter();
+            glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+            glStencilMask(0x00);
+            glDisable(GL_DEPTH_TEST);
+            parameter->bStencil = true;
+            actor->Draw();
+            parameter->bStencil = false;
+            glStencilMask(0xFF);
+            glStencilFunc(GL_ALWAYS, 0, 0xFF);
+            glEnable(GL_DEPTH_TEST);
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         finalColor = dcbo;
     }else
@@ -603,7 +641,7 @@ void OpenGLRenderer::Draw()
     //posteffect
     glBindFramebuffer(GL_FRAMEBUFFER, pfbo);
     glDisable(GL_DEPTH_TEST);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     rendererShader->UseProgram();
     OpenGLShader* rendererOpenGLShader = static_cast<OpenGLShader*>(rendererShader.get());

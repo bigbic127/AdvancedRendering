@@ -10,16 +10,20 @@ uniform sampler2D gDiffuse;
 uniform sampler2D gRoughness;
 uniform sampler2D gAmbientOcclusion;
 uniform sampler2D shadowmapTexture;
+uniform samplerCube skyboxTexture;
 
 uniform vec3 directionalLight;
 uniform vec3 cameraPosition;
 uniform mat4 mLightMatrix;
 
 //material parameter
+uniform int shader = 0;
 uniform vec3 ambientColor = vec3(0.0f);
 uniform vec3 diffuseColor = vec3(1.0f);
 uniform vec3 specularColor = vec3(0.5f);
 uniform float specularShininess = 32.0f;
+uniform float refractionFactor = 0.0f;
+
 //light parameter
 uniform float lightIntensity = 1.0f;
 uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
@@ -53,7 +57,7 @@ void main()
 {
     vec3 position = texture(gPosition, fragTexcoord).rgb;
     vec3 normal = normalize(texture(gNormal, fragTexcoord).rgb);
-    vec3 diffuse = texture(gDiffuse, fragTexcoord).rgb;
+    vec3 albedo = texture(gDiffuse, fragTexcoord).rgb;
     float roughness = texture(gRoughness, fragTexcoord).r;
     float occlusion = texture(gAmbientOcclusion, fragTexcoord).r;
 
@@ -61,17 +65,31 @@ void main()
     vec3 viewDir = normalize(cameraPosition - position);
 
     float lightValue = max(dot(normal, lightDir),0.0f);
-    //blinn
-    vec3 halfwayDir = normalize(lightDir + viewDir); 
-    float reflectValue = pow(max(dot(normal, halfwayDir),0.0f), specularShininess);
-
-    vec3 ambient = occlusion * diffuse * ambientColor + lightAmbient;
-    diffuse = diffuse * diffuseColor * lightValue * lightIntensity * lightColor;
+    //phong, blinn phong
+    float reflectValue = 0.0f;
+    if(shader == 0)
+    {
+        vec3 halfwayDir = normalize(lightDir + viewDir); 
+        reflectValue = pow(max(dot(normal, halfwayDir),0.0f), specularShininess);
+    }else
+    {
+        vec3 reflectDir = reflect(-lightDir, normal);
+        reflectValue = pow(max(dot(viewDir, reflectDir),0.0f), specularShininess);
+    }
+    //skybox
+    //vec3 I = normalize(position-cameraPosition);
+    //float ratio = 1.00 / refractionIndex;
+    //vec3 R = refract(I, normal, ratio); //reflect(반사), refract(굴절)
+    vec3 R = reflect(-viewDir, normal);
+    vec3 skyboxColor = texture(skyboxTexture, R).rgb;
+    //result
+    vec3 ambient = occlusion * albedo * ambientColor + lightAmbient;
+    vec3 diffuse = albedo * diffuseColor * lightValue * lightIntensity * lightColor;
     vec3 specular = specularColor * lightIntensity * lightColor * reflectValue * roughness;
     
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     float shadow = CaculationShadow(position, bias);
-    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular));
+    vec3 result = ambient + (1.0 - shadow) * (diffuse + specular) + (skyboxColor * refractionFactor);
 
     FragColor = vec4(result, 1.0);
 }

@@ -14,6 +14,11 @@ class CameraComponent:public SceneComponent
     public:
         glm::mat4 GetViewMatrix() const{return view;}
         glm::mat4 GetProjectionMatrix() const{return projection;}
+        void SetCameraRotation();
+        void SetPosition(glm::vec3 p);
+        float GetDistance(){return distance;}
+        void SetDistance(float dis){distance = dis;}
+        void GetUpVector();
         const CameraParameter& GetCameraParameter() const{return cameraParameter;}
         void SetCmaeraParameter(CameraParameter parameter){cameraParameter = parameter;}
         void SetFov(float fov){cameraParameter.fov = fov;}
@@ -25,4 +30,8 @@ class CameraComponent:public SceneComponent
         glm::mat4 projection{1.0f};
         glm::vec3 targetPosition{0.0f, 3.0f, 0.0f};
         CameraParameter cameraParameter;
+        float distance;
+        glm::vec3 up{0.0f,1.0f,0.0f};
+        glm::vec3 right{1.0f,0.0f,0.0f};
+
 };
