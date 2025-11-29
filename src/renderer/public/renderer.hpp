@@ -76,7 +76,7 @@ class OpenGLRenderer:public IRenderer
         unsigned int finalColor; //finalColor
         int width, height;
         bool bStencil = false;
-        int bDeferred = 0;
+        int bDeferred = 1;
         std::unique_ptr<IMesh> rendererMesh;
         std::unique_ptr<IShader> rendererShader;
         PostEffectType postEffect = PostEffectType::None;
