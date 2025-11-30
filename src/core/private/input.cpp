@@ -48,7 +48,7 @@ void Input::InputCameraUpdate()
             isRotation = false;
         }else if(isLeftDragging)
         {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+            ImGui::SetMouseCursor(ImGuiMouseCursor_None);
             isRotation = true;
         }
         else if(ImGui::IsMouseReleased(ImGuiMouseButton_Left))
@@ -69,25 +69,25 @@ void Input::InputCameraUpdate()
         {
             io.MousePos.x = sceneSize.x+scenePos.x-5.0f;
             io.WantSetMousePos = true;
-            delta.x = -deletaTime;
+            delta.x = -1.0f;
         }
         else if(sceneSize.x+scenePos.x-2.0f<=pos.x)
         {
             io.MousePos.x = scenePos.x+5.0f;
             io.WantSetMousePos = true;
-            delta.x = deletaTime;
+            delta.x = 1.0f;
         }
         if(scenePos.y+2.0f>=pos.y)
         {
             io.MousePos.y = sceneSize.y+scenePos.y-5.0f;
             io.WantSetMousePos = true;
-            delta.y = -deletaTime;
+            delta.y = -1.0f;
         }
         else if(sceneSize.y+scenePos.y-2.0f <=pos.y)
         {
             io.MousePos.y = scenePos.y+5.0f;
             io.WantSetMousePos = true;
-            delta.y = deletaTime;
+            delta.y = 1.0f;
         }
         if(isLeftDragging)
         {
