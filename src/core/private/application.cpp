@@ -37,7 +37,7 @@ void Application::Init()
     auto lightComponent = actor->AddComponent<DirectionalLightComponent>();
     lightComponent->SetPosition(glm::vec3(0.0f, 5.0f, 0.0f));
     lightComponent->SetRotation(glm::vec3(35.0f, -40.0f, 0.0f));
-    lightComponent->SetIntensity(2.5f);
+    lightComponent->SetIntensity(10.0f);
     world->SetCurrentLight(actor);
     //get standardMaterial
     auto itMat = resourceManager->GetMaterials().find("standardMaterial");

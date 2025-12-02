@@ -14,7 +14,7 @@ enum MaterialType
 struct MaterialParameter
 {
     //shader
-    int shader = 0;
+    int shader = 2;
     //type
     MaterialType type = MaterialType::Plastic;
     //color

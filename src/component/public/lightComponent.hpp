@@ -33,7 +33,7 @@ class LightComponent:public SceneComponent
     private:
         float lightIntensity = 1.0f;
         glm::vec3 color{1.0f};
-        glm::vec3 ambient{0.0f};
+        glm::vec3 ambient{0.2f};
         IMesh* skyboxMesh;
         IShader* skyboxShader;
         ITexture* skyboxTexture;

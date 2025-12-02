@@ -73,6 +73,16 @@ vec3 ToneMapping()
     return result;
 }
 
+vec3 ACESFilm(vec3 x)
+{
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+}
+
 void main()
 {
     vec3 color = texture(screenTexture, fragTexcoord).rgb;
@@ -96,6 +106,8 @@ void main()
     //gray
     //float average = (color.x + color.y + color.z) / 3.0;
     //color = vec3(average, average, average);
+    //color = color / (color + vec3(1.0));
+    //color = ACESFilm(color);
     FragColor = vec4(pow(color,vec3(1.0/exposure)), 1.0);
 
 }

@@ -30,6 +30,7 @@ class IRenderer
         virtual unsigned int& GetGBufferNormal() = 0;
         virtual unsigned int& GetGBufferDiffuse() = 0;
         virtual unsigned int& GetGBufferRoughness() = 0;
+        virtual unsigned int& GetGBufferMetallic() = 0;
         virtual unsigned int& GetGBufferOcclusion() = 0;
         virtual void CreateBuffer(int width, int height) = 0;
         virtual void ResizeBuffer(int width, int height) = 0;
@@ -50,8 +51,9 @@ class OpenGLRenderer:public IRenderer
         unsigned int& GetGBufferPosition() override{return gpos;}
         unsigned int& GetGBufferNormal() override{return gnor;}
         unsigned int& GetGBufferDiffuse() override{return gdiff;}
-        unsigned int& GetGBufferRoughness() override{return grou;}
-        unsigned int& GetGBufferOcclusion() override{return ssaoblurcbo;}
+        unsigned int& GetGBufferRoughness() override{return texViewRoughness;}
+        unsigned int& GetGBufferMetallic() override{return texViewMetallic;}
+        unsigned int& GetGBufferOcclusion() override{return texViewOcclusion;}
         float* GetSSAORadius(){return &ssaoRadius;}
         float* GetSSAOBias(){return &ssaobias;}
         void ResizeBuffer(int w, int h);
@@ -69,7 +71,10 @@ class OpenGLRenderer:public IRenderer
         unsigned int fbo, rbo, cbo;// forward renderbuffer
         unsigned int shadowFrameBuffer, shadowFrameTexture;//shadow map
         unsigned int gfbo, gdepth;//geometry framebuffer
-        unsigned int gpos, gnor, gdiff, grou, gao;//geometry colorbuffer
+        unsigned int gpos, gnor, gdiff;//geometry colorbuffer
+        unsigned int gORMI;//geometry colorbuffer(AO, Roughness, Metallic, Displacement)
+        unsigned int texViewOcclusion, texViewRoughness, texViewMetallic, texViewID;//view
+        unsigned int debugTexture;//debug texture
         unsigned int ssaofbo, ssaocbo, ssaoblurfbo, ssaoblurcbo;//ssao, ssao blur buffer
         unsigned int dfbo, dcbo; //deferred framebuffer
         unsigned int pfbo, pcbo;//posteffect

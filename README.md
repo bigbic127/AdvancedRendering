@@ -1,5 +1,5 @@
 # AdvancedRendering
-**Lighting, Shadow, PBR Material, RayTracing** 학습.
+**Lighting, Shadow, PBR, IBL** 학습.
 
 
 ## 주요 특징
@@ -22,7 +22,7 @@
 ## 참고 사이트
 - **https://learnopengl.com/**
 - **https://media.korea.ac.kr/books/**
-
+- **https://lifeisforu.tistory.com/category/PBR%28Physically%20Based%20Rendering%29**
 
 ## 🖼️ 샘플 렌더 결과
 

@@ -402,13 +402,14 @@ void Editor::CreateSceneLayout()
                 ImGuiWindowFlags_NoSavedSettings|
                 ImGuiWindowFlags_NoBackground |
                 ImGuiWindowFlags_NoDecoration);
-        if(ImGui::BeginTable("framebufferTable", 6, ImGuiTableFlags_RowBg|ImGuiTableFlags_Resizable|ImGuiTableFlags_Borders, ImVec2(1180, 0)))
+        if(ImGui::BeginTable("framebufferTable", 7, ImGuiTableFlags_RowBg|ImGuiTableFlags_Resizable|ImGuiTableFlags_Borders, ImVec2(1395, 0)))
         {
             ImGui::TableSetupColumn("Shadow Map", ImGuiTableColumnFlags_WidthFixed, 130.0f);
             ImGui::TableSetupColumn("Position", ImGuiTableColumnFlags_WidthFixed, 200.0f);
             ImGui::TableSetupColumn("Normal", ImGuiTableColumnFlags_WidthFixed, 200.0f);
             ImGui::TableSetupColumn("Diffuse", ImGuiTableColumnFlags_WidthFixed, 200.0f);
             ImGui::TableSetupColumn("Roughness", ImGuiTableColumnFlags_WidthFixed, 200.0f);
+            ImGui::TableSetupColumn("Metallic", ImGuiTableColumnFlags_WidthFixed, 200.0f);
             ImGui::TableSetupColumn("Occlusion", ImGuiTableColumnFlags_WidthFixed, 200.0f);
 
             ImGui::TableHeadersRow();
@@ -424,6 +425,8 @@ void Editor::CreateSceneLayout()
             ImGui::TableSetColumnIndex(4);
             ImGui::Image(Context::GetContext()->renderer->GetGBufferRoughness(), ImVec2(200, 128), ImVec2(0, 1), ImVec2(1, 0));
             ImGui::TableSetColumnIndex(5);
+            ImGui::Image(Context::GetContext()->renderer->GetGBufferMetallic(), ImVec2(200, 128), ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::TableSetColumnIndex(6);
             ImGui::Image(Context::GetContext()->renderer->GetGBufferOcclusion(), ImVec2(200, 128), ImVec2(0, 1), ImVec2(1, 0));
             ImGui::EndTable();
         }
@@ -636,8 +639,10 @@ void Editor::CreateRightPanel()
                 ImGui::SetCursorPosX(40.0f);
                 ImGui::Text("Shader");
                 ImGui::SameLine(120.0f, 0.0f);
+                IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
+                MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
                 const char* shaderItems[] = { "Blinn", "Phong", "PBR"};
-                static int shader_item_selected_idx = 0;
+                static int shader_item_selected_idx = parameter->shader;
                 const char* shader_combo_preview_value = shaderItems[shader_item_selected_idx];
                 if(ImGui::BeginCombo("##shaderCombo", shader_combo_preview_value))
                 {
@@ -646,8 +651,6 @@ void Editor::CreateRightPanel()
                         const bool is_selected = (shader_item_selected_idx == n);
                         if (ImGui::Selectable(shaderItems[n], is_selected))
                         {
-                            IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
-                            MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
                             parameter->shader = n;
                             shader_item_selected_idx = n;
                         }
@@ -671,8 +674,6 @@ void Editor::CreateRightPanel()
                         const bool is_selected = (type_item_selected_idx == n);
                         if (ImGui::Selectable(typeItems[n], is_selected))
                         {
-                            IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
-                            MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
                             parameter->type = (MaterialType)n;
                             type_item_selected_idx = n;
                         }
@@ -689,8 +690,6 @@ void Editor::CreateRightPanel()
                 ImGui::PopFont();
                 ImGui::PopStyleColor();
                 //textures
-                IMaterial* material = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>()->GetMaterial();
-                MaterialParameter* parameter = static_cast<OpenGLMaterial*>(material)->GetParameter();
                 ImGui::SetCursorPosX(40.0f);
                 if(ImGui::BeginTable("textureTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders))
                 {
@@ -740,22 +739,28 @@ void Editor::CreateRightPanel()
                     ImGui::DragFloat("##heightScale", &parameter->heightScale, 0.001f, -1.0f, 1.0f);
                 }
                 //parameter
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
+                ImGui::PushFont(nanumSquare.reqular, 13.0f);
+                ImGui::SeparatorText("parameters");
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Color");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ColorEdit4("##diffusecolorpick", glm::value_ptr(parameter->diffuseColor));
+                ImGui::SetCursorPosX(40.0f);
+                ImGui::Text("Specular");
+                ImGui::SameLine(120.0f, 0.0f);
+                ImGui::ColorEdit3("##specularcolorpick", glm::value_ptr(parameter->specularColor));
+                ImGui::Separator();
                 if(shader_item_selected_idx != 2) //blinn phong
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
                     ImGui::PushFont(nanumSquare.reqular, 13.0f);
-                    ImGui::SeparatorText("parameters");
+                    ImGui::SeparatorText("blinn-phong");
                     ImGui::PopFont();
                     ImGui::PopStyleColor();
-
-                    ImGui::SetCursorPosX(40.0f);
-                    ImGui::Text("Color");
-                    ImGui::SameLine(120.0f, 0.0f);
-                    ImGui::ColorEdit4("##diffusecolorpick", glm::value_ptr(parameter->diffuseColor));
-                    ImGui::SetCursorPosX(40.0f);
-                    ImGui::Text("Specular");
-                    ImGui::SameLine(120.0f, 0.0f);
-                    ImGui::ColorEdit3("##specularcolorpick", glm::value_ptr(parameter->specularColor));
                     ImGui::SetCursorPosX(40.0f);
                     ImGui::Text("Shininess");
                     ImGui::SameLine(120.0f, 0.0f);
@@ -776,19 +781,10 @@ void Editor::CreateRightPanel()
                     ImGui::SameLine(120.0f, 0.0f);
                     ImGui::DragFloat("##roughnessfloat", &parameter->roughnessFactor, 0.01f, 0.0f, 1.0f);
                     ImGui::SetCursorPosX(40.0f);
-                    ImGui::Text("Specular");
-                    ImGui::SameLine(120.0f, 0.0f);
-                    ImGui::DragFloat("##specualrfloat", &parameter->shininess, 0.01f, 0.0f, 1.0f);
-                    ImGui::SetCursorPosX(40.0f);
                     ImGui::Text("Metallic");
                     ImGui::SameLine(120.0f, 0.0f);
                     ImGui::DragFloat("##metallicfloat", &parameter->metallicFactor, 0.01f, 0.0f, 1.0f);
-                    ImGui::SetCursorPosX(40.0f);
-                    ImGui::Text("Normal");
-                    ImGui::SameLine(120.0f, 0.0f);
-                    ImGui::DragFloat("##normalfloat", &parameter->normalFactor, 0.01f, 0.0f, 1.0f);
                 }
-
                 MeshComponent* meshComponent = Context::GetContext()->world->GetSelectedActor()->GetComponent<MeshComponent>();
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 120));
                 ImGui::PushFont(nanumSquare.reqular, 13.0f);
