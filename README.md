@@ -26,4 +26,6 @@
 
 ## 🖼️ 샘플 렌더 결과
 
+[text](screenshot) 스크린샷 폴더 확인
+
 ![alt text](screenshot/imageF.png)

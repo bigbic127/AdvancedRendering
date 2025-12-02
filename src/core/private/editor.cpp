@@ -569,6 +569,7 @@ void Editor::CreateRightPanel()
                         const bool is_selected = (tone_item_selected_idx == n);
                         if (ImGui::Selectable(toneItems[n], is_selected))
                         {
+                            renderer->SetToneType((ToneMappingType)n);
                             tone_item_selected_idx = n;
                         }
                         if (is_selected)

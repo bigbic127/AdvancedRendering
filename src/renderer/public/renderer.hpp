@@ -6,6 +6,15 @@
 class IMesh;
 class IShader;
 
+enum ToneMappingType
+{
+    Linear = 0,
+    Reinhard,
+    Filmic,
+    ACES,
+    Agx
+};
+
 enum PostEffectType
 {
     None = 0,
@@ -62,6 +71,7 @@ class OpenGLRenderer:public IRenderer
         float* GetExposure(){return &exposure;}
         int* GetDeferred(){return &bDeferred;}
         void SetEffectType(PostEffectType type){postEffect = type;}
+        void SetToneType(ToneMappingType type){toneType = type;}
 
     private:
         void CreateBuffer(int width, int height);
@@ -85,6 +95,7 @@ class OpenGLRenderer:public IRenderer
         std::unique_ptr<IMesh> rendererMesh;
         std::unique_ptr<IShader> rendererShader;
         PostEffectType postEffect = PostEffectType::None;
+        ToneMappingType toneType = ToneMappingType::Linear;
         float exposure = 2.2f;
         //occlusion
         std::vector<glm::vec3>ssaoKernel;

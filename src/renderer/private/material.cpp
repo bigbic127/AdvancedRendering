@@ -140,33 +140,33 @@ void OpenGLMaterial::AddTexture(ITexture* texture, int type)
         }
         case 2:
         {
-            GLint location = shader->GetLocation("roughnessTexture");
+            GLint location = shader->GetLocation("normalTexture");
             glUniform1i(location, 1);
             glActiveTexture(GL_TEXTURE1);
-            parameter.roughnessTextrue = texture;
+            parameter.normalTexture = texture;
             break;
         }
         case 3:
         {
-            GLint location = shader->GetLocation("metallicTexture");
+            GLint location = shader->GetLocation("roughnessTexture");
             glUniform1i(location, 2);
             glActiveTexture(GL_TEXTURE2);
-            parameter.metallicTexture = texture;
+            parameter.roughnessTextrue = texture;
             break;
         }
         case 4:
         {
-            GLint location = shader->GetLocation("normalTexture");
+            GLint location = shader->GetLocation("metallicTexture");
             glUniform1i(location, 3);
             glActiveTexture(GL_TEXTURE3);
-            parameter.normalTexture = texture;
+            parameter.metallicTexture = texture;
             break;
         }
         case 5:
         {
             GLint location = shader->GetLocation("aoTexture");
             glUniform1i(location, 4);
-            glActiveTexture(GL_TEXTURE3);
+            glActiveTexture(GL_TEXTURE4);
             parameter.aoTexture = texture;
             break;
         }
@@ -174,7 +174,7 @@ void OpenGLMaterial::AddTexture(ITexture* texture, int type)
         {
             GLint location = shader->GetLocation("dispTexture");
             glUniform1i(location, 5);
-            glActiveTexture(GL_TEXTURE4);
+            glActiveTexture(GL_TEXTURE5);
             parameter.dispTexture = texture;
             break;
         }

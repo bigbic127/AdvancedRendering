@@ -83,6 +83,9 @@ OpenGLRenderer::~OpenGLRenderer()
     glDeleteFramebuffers(1, &dfbo);
     glDeleteTextures(1, &dcbo);
     glDeleteBuffers(1, &vubo);
+    glDeleteTextures(1, &texViewOcclusion);
+    glDeleteTextures(1, &texViewRoughness);
+    glDeleteTextures(1, &texViewMetallic);
 }
 
 void OpenGLRenderer::CreateBuffer(int width, int height)
@@ -264,6 +267,9 @@ void OpenGLRenderer::ResizeBuffer(int width, int height)
     glDeleteTextures(1, &ssaoblurcbo);
     glDeleteFramebuffers(1, &dfbo);
     glDeleteTextures(1, &dcbo);
+    glDeleteTextures(1, &texViewOcclusion);
+    glDeleteTextures(1, &texViewRoughness);
+    glDeleteTextures(1, &texViewMetallic);
     CreateBuffer(width, height);
 }
 
@@ -411,6 +417,14 @@ void OpenGLRenderer::Draw()
                 parameter->diffuseTexture->Bind();
                 index++;
             }
+            if(parameter->normalTexture != nullptr)
+            {
+                gbufferShader->SetBool("bNormal", true);
+                gbufferShader->SetInt("normalTexture", index);
+                glActiveTexture(GL_TEXTURE0+index);
+                parameter->normalTexture->Bind();
+                index++;
+            }
             if(parameter->roughnessTextrue != nullptr)
             {
                 gbufferShader->SetBool("bRoughness", true);
@@ -419,12 +433,12 @@ void OpenGLRenderer::Draw()
                 parameter->roughnessTextrue->Bind();
                 index++;
             }
-            if(parameter->normalTexture != nullptr)
+            if(parameter->metallicTexture != nullptr)
             {
-                gbufferShader->SetBool("bNormal", true);
-                gbufferShader->SetInt("normalTexture", index);
+                gbufferShader->SetBool("bMetallic", true);
+                gbufferShader->SetInt("metallicTexture", index);
                 glActiveTexture(GL_TEXTURE0+index);
-                parameter->normalTexture->Bind();
+                parameter->metallicTexture->Bind();
                 index++;
             }
             if(parameter->aoTexture != nullptr)
@@ -451,8 +465,9 @@ void OpenGLRenderer::Draw()
             }
             gbufferShader->SetBool("bDisp", false);
             gbufferShader->SetBool("bDiffuse", false);
-            gbufferShader->SetBool("bRoughness", false);
             gbufferShader->SetBool("bNormal", false);
+            gbufferShader->SetBool("bRoughness", false);
+            gbufferShader->SetBool("bMetallic", false);            
             gbufferShader->SetBool("bAo", false);
             gbufferShader->EndProgam();
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -685,6 +700,7 @@ void OpenGLRenderer::Draw()
     rendererShader->UseProgram();
     OpenGLShader* rendererOpenGLShader = static_cast<OpenGLShader*>(rendererShader.get());
     rendererOpenGLShader->SetInt("postEffecttype", postEffect);
+    rendererOpenGLShader->SetInt("toneType", toneType);
     rendererOpenGLShader->SetFloat("exposure", exposure);
     rendererOpenGLShader->SetInt("screenTexture", 0);
     glActiveTexture(GL_TEXTURE0);

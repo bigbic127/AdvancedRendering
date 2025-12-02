@@ -31,9 +31,19 @@ ResourceManager::ResourceManager()
     auto gangesdispTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_disp_2k.png");
     ITexture* ptrgangesdispTexture = gangesdispTexture.get();
     textures.emplace("ganges_river_pebbles_disp_2k", std::move(gangesdispTexture));
-    auto gangesarmTexture = std::make_unique<OpenGLTexture>("/textures/ganges_river_pebbles_arm_2k.png");
-    ITexture* ptrgangesarmTexture = gangesarmTexture.get();
-    textures.emplace("ganges_river_pebbles_arm_2k", std::move(gangesarmTexture));
+    //create rustediron
+    auto rustedironDiffuseTexture = std::make_unique<OpenGLTexture>("/textures/rustediron2_basecolor.png");
+    ITexture* ptrrustedironDiffTexture = rustedironDiffuseTexture.get();
+    textures.emplace("rustediron2_basecolor", std::move(rustedironDiffuseTexture));
+    auto rustedironnorTexture = std::make_unique<OpenGLTexture>("/textures/rustediron2_normal.png");
+    ITexture* ptrrustedironnorTexture = rustedironnorTexture.get();
+    textures.emplace("rustediron2_normal", std::move(rustedironnorTexture));
+    auto rustedironroughTexture = std::make_unique<OpenGLTexture>("/textures/rustediron2_roughness.png");
+    ITexture* ptrrustedironroughTexture = rustedironroughTexture.get();
+    textures.emplace("rustediron2_roughness", std::move(rustedironroughTexture));
+    auto rustedironmetallicTexture = std::make_unique<OpenGLTexture>("/textures/rustediron2_metallic.png");
+    ITexture* ptrrustedironmetallicTexture = rustedironmetallicTexture.get();
+    textures.emplace("rustediron2_metallic", std::move(rustedironmetallicTexture));
     //create skybox texture
     std::vector<std::string> skyboxPaths
                                 {
@@ -94,12 +104,12 @@ ResourceManager::ResourceManager()
     IMaterial* ptrMaterial = standardMaterial.get();
     materials.emplace("standardMaterial", std::move(standardMaterial));
     OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(ptrMaterial);
-    mat->AddTexture(ptrgangesDiffTexture, 1);
-    mat->AddTexture(ptrgangesroughTexture, 2);
-    mat->AddTexture(ptrgangesarmTexture, 3);
-    mat->AddTexture(ptrgangesnorTexture, 4);
-    mat->AddTexture(ptrgangesaoTexture, 5);
-    mat->AddTexture(ptrgangesdispTexture, 6);
+    mat->AddTexture(ptrrustedironDiffTexture, 1);//diffuse
+    mat->AddTexture(ptrrustedironnorTexture, 2);//normal
+    mat->AddTexture(ptrrustedironroughTexture, 3);//roughness
+    mat->AddTexture(ptrrustedironmetallicTexture, 4);//metallic
+    mat->AddTexture(nullptr, 5);//ao
+    mat->AddTexture(nullptr, 6);//displacement
     //create planeMaterial
     auto planeMaterial = std::make_unique<OpenGLMaterial>(ptrShader);
     materials.emplace("planeMaterial", std::move(planeMaterial));
