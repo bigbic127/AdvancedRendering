@@ -35,7 +35,7 @@ void Input::InputCameraUpdate()
         if(wheel != 0.0f)
         {
             float distance = cameraComponent->GetDistance();
-            distance -= wheel * deletaTime * 0.1f;
+            distance -= wheel * deletaTime * 0.01f;
             distance = glm::clamp(distance, 5.0f, 50.0f);
             cameraComponent->SetDistance(distance);
             cameraComponent->SetCameraRotation();

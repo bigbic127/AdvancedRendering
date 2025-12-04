@@ -25,6 +25,7 @@ class LightComponent:public SceneComponent
         float* GetIntensity(){return &lightIntensity;}
         float* GetColor(){return glm::value_ptr(color);}
         float* GetAmbient(){return glm::value_ptr(ambient);}
+        ITexture* GetHDRITexture() const{return skyboxTexture;}
         ITexture* GetSkyboxTexture() const{return skyboxTexture;}
         glm::mat4 GetViewMatrix() const{return view;}
         glm::mat4 GetProjectionMatrix() const{return projection;}

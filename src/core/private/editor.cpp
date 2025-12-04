@@ -473,9 +473,9 @@ void Editor::CreateRightPanel()
                 ImGui::PopStyleColor();
 
                 ImGui::SetCursorPosX(40.0f);
-                ImGui::Text("Intensity");
+                ImGui::Text("Brightness");
                 ImGui::SameLine(120.0f, 0.0f);
-                ImGui::DragFloat("##intensityfloat", lightComponent->GetIntensity(), 0.01f, 0.0f, 150.0f);
+                ImGui::DragFloat("##brightnessfloat", lightComponent->GetIntensity(), 0.01f, 0.0f, 150.0f);
                 ImGui::SetCursorPosX(40.0f);
                 ImGui::Text("Color");
                 ImGui::SameLine(120.0f, 0.0f);
@@ -488,7 +488,7 @@ void Editor::CreateRightPanel()
                 ImGui::SetCursorPosX(40.0f);
                 ImGui::Text("Skybox");
                 ImGui::SameLine(120.0f, 0.0f);
-                ImGui::ImageButton("hdriTexButton", lightComponent->GetSkyboxTexture()->GetID(), ImVec2(64*3,64*2));
+                ImGui::ImageButton("hdriTexButton", lightComponent->GetSkyboxTexture()->GetImageID(), ImVec2(64*3,64*2), ImVec2(0,1), ImVec2(1,0));
                 ImGui::Separator();
             }
             if (ImGui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))

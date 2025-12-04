@@ -10,7 +10,7 @@ LightComponent::LightComponent()
 {
     skyboxMesh = Context::GetContext()->resourceManager->FindMesh("skybox");
     skyboxShader = Context::GetContext()->resourceManager->FindShader("skyboxShader");
-    skyboxTexture = Context::GetContext()->resourceManager->FindTexture("skybox");
+    skyboxTexture = Context::GetContext()->resourceManager->FindTexture("HDR");
 }
 
 void LightComponent::Draw()

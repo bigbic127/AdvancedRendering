@@ -68,6 +68,7 @@ void Application::Init()
     {
         auto actor = world->CreateActor("Plane Actor");
         actor->AddComponent<MeshComponent>(it->second.get(), planeMaterial);
+        actor->GetComponent<MeshComponent>()->SetScale(glm::vec3(2.0f));
     }
     Loop();
 }

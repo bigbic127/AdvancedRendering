@@ -10,7 +10,7 @@ uniform sampler2D gDiffuse;
 uniform sampler2D gORMI;
 uniform sampler2D occlusionTexture;         
 uniform sampler2D shadowmapTexture;
-uniform samplerCube skyboxTexture;
+uniform samplerCube illuminanceMap;
 
 uniform vec3 directionalLight;
 uniform vec3 cameraPosition;
@@ -41,7 +41,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = PI * denom * denom;
 
-    return num / max(denom, 0.0000001);
+    return num / max(denom, 0.0000001f);
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness)
@@ -86,10 +86,11 @@ float CaculationShadow(vec3 position, float bias=0.005f)
         for(int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(shadowmapTexture, projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
-        }    
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
     }
     shadow /= 9.0;
+    //shadow = pow(shadow,2.0f);
     if(projCoords.z > 1.0)
         shadow = 0.0;
     return shadow;
@@ -111,7 +112,7 @@ void main()
 
     vec3 halfwayDir = normalize(viewDir + lightDir);
 
-    float bias = max(0.01f * (1.0 - dot(normal, lightDir)), 0.001f);
+    float bias = max(0.05f * (1.0 - dot(normal, lightDir)), 0.0005f);
     float shadow = CaculationShadow(position, bias);
 
     //phong, blinn phong
@@ -124,27 +125,31 @@ void main()
         reflectValue = pow(max(dot(viewDir, reflectDir),0.0f), specularShininess);
     }
     //pbr
-    vec3 Lo = vec3(0.0);
+    vec3 Lo = vec3(0.0f);
     if(shader ==2)
     {
-        vec3 F0 = vec3(0.04f);
+        float IOR = 1.5f;//Index Of Reflection
+        vec3 F0 = vec3(pow((IOR-1)/(IOR+1), 2));//Fresnel equation | 각도에 따른 반사율 
         F0 = mix(F0, albedo, metallic);
         vec3 radiance = lightIntensity * lightColor;
-       
-        float NDF = DistributionGGX(normal, halfwayDir, roughness);
+
+        float D = DistributionGGX(normal, halfwayDir, roughness);
         float G   = GeometrySmith(normal, viewDir, lightDir, roughness);
         vec3  F   = FresnelSchlick(max(dot(halfwayDir, viewDir), 0.0), F0);
 
-        vec3 numerator = NDF * G * F; 
+        vec3 numerator = D * G * F; 
         float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
         vec3 specular = numerator / denominator;
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
         kD *= 1.0 - metallic;
         float NdotL = max(dot(normal, lightDir), 0.0);
-        Lo = (kD * albedo / PI + specular) * radiance * NdotL * (1.0f - shadow); 
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL * (1.0f - shadow); 
         
-        vec3 ambient = occlusion * albedo * lightAmbient;
+        vec3 illuminance = texture(illuminanceMap, normal).rgb;
+        vec3 diffuse = illuminance * albedo * kD;
+
+        vec3 ambient = occlusion * diffuse * lightAmbient;
         vec3 color = ambient + Lo;
         FragColor = vec4(color, 1.0);
     }
@@ -155,7 +160,7 @@ void main()
         //float ratio = 1.00 / refractionIndex;
         //vec3 R = refract(I, normal, ratio); //reflect(반사), refract(굴절)
         vec3 R = reflect(-viewDir, normal);
-        vec3 skyboxColor = texture(skyboxTexture, R).rgb * refractionFactor;
+        vec3 skyboxColor = texture(illuminanceMap, R).rgb * refractionFactor;
         //result
         vec3 ambient = occlusion * albedo * lightAmbient;
         vec3 diffuse = albedo * diffuseColor * lightValue * lightIntensity * lightColor;

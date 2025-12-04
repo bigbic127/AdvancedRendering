@@ -56,13 +56,25 @@ ResourceManager::ResourceManager()
                                 };
     auto skyboxTexture = std::make_unique<OpenGLCubeTexture>(skyboxPaths);
     textures.emplace("skybox", std::move(skyboxTexture));
-
+    //create HDR texture
+    auto HDRTexture = std::make_unique<OpenGLHDRTexture>("/textures/newport_loft.hdr");
+    textures.emplace("HDR", std::move(HDRTexture));
     //create standard shader
     const std::string vsPath = "/shader/standard.vert";
     const std::string fsPath = "/shader/standard.frag";
     auto standardShader = std::make_unique<OpenGLShader>(vsPath, fsPath);
     IShader* ptrShader = standardShader.get();
     shaders.emplace("standardShader", std::move(standardShader));
+    //create HDRI shader
+    const std::string hdrivsPath = "/shader/HDRI.vert";
+    const std::string hdrifsPath = "/shader/HDRI.frag";
+    auto hdriShader = std::make_unique<OpenGLShader>(hdrivsPath, hdrifsPath);
+    shaders.emplace("hdriShader", std::move(hdriShader));
+    //create HDRI illuminance shader
+    const std::string illuminancevsPath = "/shader/HDRIilluminance.vert";
+    const std::string illuminancefsPath = "/shader/HDRIilluminance.frag";
+    auto illuminanceShader = std::make_unique<OpenGLShader>(illuminancevsPath, illuminancefsPath);
+    shaders.emplace("illuminanceShader", std::move(illuminanceShader));
     //create skybox shader
     const std::string skyboxvsPath = "/shader/skybox.vert";
     const std::string skyboxfsPath = "/shader/skybox.frag";

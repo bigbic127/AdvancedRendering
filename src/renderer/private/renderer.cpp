@@ -119,7 +119,7 @@ void OpenGLRenderer::CreateBuffer(int width, int height)
     //colorTexture
     glGenTextures(1, &pcbo);
     glBindTexture(GL_TEXTURE_2D, pcbo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
@@ -207,10 +207,10 @@ void OpenGLRenderer::CreateGBuffer(int width, int height)
     //colorTexture
     glGenTextures(1, &dcbo);
     glBindTexture(GL_TEXTURE_2D, dcbo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
+    //glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, width, height, GL_TRUE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dcbo, 0);
     //depth
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, gdepth, 0);
@@ -285,7 +285,7 @@ void OpenGLRenderer::Begin()
     glGenFramebuffers(1, &shadowFrameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
     //shadowMap texture
-    unsigned int shadow_width = 2048, shadow_height = 2048;
+    unsigned int shadow_width = 4096, shadow_height = 4096;
     glGenTextures(1, &shadowFrameTexture);
     glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_width, shadow_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -309,13 +309,91 @@ void OpenGLRenderer::Begin()
     shader = Context::GetContext()->resourceManager->FindShader("skyboxShader");
     shaderID = static_cast<OpenGLShader*>(shader)->GetID();
     index = glGetUniformBlockIndex(shaderID, "mCamera");
-    glUniformBlockBinding(shaderID, index, 0);    
+    glUniformBlockBinding(shaderID, index, 0); 
     //Shader Uniform buffers
     glGenBuffers(1, &vubo);
     glBindBuffer(GL_UNIFORM_BUFFER, vubo);
     glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBufferRange(GL_UNIFORM_BUFFER, 0, vubo, 0, 2*sizeof(glm::mat4));
+
+    //Create HDRI to skyCubeMap
+    unsigned int captureFBO, captureRBO;
+    glGenFramebuffers(1, &captureFBO);
+
+    glGenRenderbuffers(1, &captureRBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
+
+    IMesh* skyboxMesh = Context::GetContext()->resourceManager->FindMesh("skybox");
+    IShader* hdriShader = Context::GetContext()->resourceManager->FindShader("hdriShader");
+    ITexture* hdriTexture = Context::GetContext()->resourceManager->FindTexture("HDR");
+
+    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureViews[] = {
+        glm::lookAt(glm::vec3(0.0f), glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)), // +X
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)), // -X
+        glm::lookAt(glm::vec3(0.0f), glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)), // +Y
+        glm::lookAt(glm::vec3(0.0f), glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)), // -Y
+        glm::lookAt(glm::vec3(0.0f), glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)), // +Z
+        glm::lookAt(glm::vec3(0.0f), glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))  // -Z
+    };
+    OpenGLShader* glHDRShader = static_cast<OpenGLShader*>(hdriShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glHDRShader->UseProgram();
+    glHDRShader->SetInt("hdrTexture", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hdriTexture->GetImageID());
+    glViewport(0, 0, 512, 512);
+    glDepthFunc(GL_LEQUAL);
+    glCullFace(GL_FRONT);
+    glHDRShader->SetMatrix4("mProjection", captureProjection);
+    for(unsigned i=0;i<6;++i)
+    {
+        glHDRShader->SetMatrix4("mView", captureViews[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, hdriTexture->GetID(), 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        skyboxMesh->Bind();
+        skyboxMesh->Draw();
+        skyboxMesh->UnBind();
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glHDRShader->EndProgam();
+    glCullFace(GL_BACK);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //illuminance
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+    IShader* illuminanceShader = Context::GetContext()->resourceManager->FindShader("illuminanceShader");
+    OpenGLShader* glIlluminanceShader = static_cast<OpenGLShader*>(illuminanceShader);
+    OpenGLHDRTexture* illuminanceTexture = static_cast<OpenGLHDRTexture*>(hdriTexture);
+    glIlluminanceShader->UseProgram();
+    glIlluminanceShader->SetInt("environmentMap", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, hdriTexture->GetID());
+    glViewport(0, 0, 32, 32);
+    glDepthFunc(GL_LEQUAL);
+    glCullFace(GL_FRONT);
+    glIlluminanceShader->SetMatrix4("mProjection", captureProjection);
+    for(unsigned i=0;i<6;++i)
+    {
+        glIlluminanceShader->SetMatrix4("mView", captureViews[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, illuminanceTexture->GetIlluminance(), 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        skyboxMesh->Bind();
+        skyboxMesh->Draw();
+        skyboxMesh->UnBind();
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glIlluminanceShader->EndProgam();
+    glCullFace(GL_BACK);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDepthFunc(GL_LESS);
 }
 
 void OpenGLRenderer::Draw()
@@ -328,7 +406,7 @@ void OpenGLRenderer::Draw()
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(lightComponent->GetProjectionMatrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     //Shadow map framebuffer
-    glViewport(0,0,2048,2048);
+    glViewport(0,0,4096,4096);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFrameBuffer);
     glEnable(GL_DEPTH_TEST);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -429,6 +507,7 @@ void OpenGLRenderer::Draw()
             {
                 gbufferShader->SetBool("bRoughness", true);
                 gbufferShader->SetInt("roughnessTexture", index);
+                parameter->roughnessFactor = 1.0f;
                 glActiveTexture(GL_TEXTURE0+index);
                 parameter->roughnessTextrue->Bind();
                 index++;
@@ -437,6 +516,7 @@ void OpenGLRenderer::Draw()
             {
                 gbufferShader->SetBool("bMetallic", true);
                 gbufferShader->SetInt("metallicTexture", index);
+                parameter->metallicFactor = 1.0f;
                 glActiveTexture(GL_TEXTURE0+index);
                 parameter->metallicTexture->Bind();
                 index++;
@@ -591,9 +671,9 @@ void OpenGLRenderer::Draw()
         glActiveTexture(GL_TEXTURE0+index);
         glBindTexture(GL_TEXTURE_2D, shadowFrameTexture);
         index++;
-        deferredShader->SetInt("skyboxTexture", index);
+        deferredShader->SetInt("illuminanceMap", index);
         glActiveTexture(GL_TEXTURE0+index);
-        lightComponent->GetSkyboxTexture()->Bind();
+        lightComponent->GetHDRITexture()->Bind();
         //mesh
         rendererMesh->Bind();
         rendererMesh->Draw();

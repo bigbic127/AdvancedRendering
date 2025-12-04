@@ -175,3 +175,67 @@ void OpenGLCubeTexture::UnBind()
 {
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
+
+//HDR Texture
+OpenGLHDRTexture::OpenGLHDRTexture(const std::string& path)
+{
+    std::string p = path;
+    std::string root = GetExecutableDir();
+    p = root + path;
+    stbi_set_flip_vertically_on_load(true);
+    float* data = stbi_loadf(p.c_str(), &width, &height, &nrChannels, 0);
+    if(data)
+    {
+        glGenTextures(1, &imageID);
+        glBindTexture(GL_TEXTURE_2D, imageID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+        stbi_image_free(data);
+        CreateCubeTexture();
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void OpenGLHDRTexture::CreateCubeTexture()
+{
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    for (unsigned int i =0; i<6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    //illuminance
+    glGenTextures(1, &illuminanceID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, illuminanceID);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    for (unsigned int i =0; i<6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+
+}
+
+void OpenGLHDRTexture::Bind()
+{
+    glBindTexture(GL_TEXTURE_CUBE_MAP, illuminanceID);
+}
+
+void OpenGLHDRTexture::UnBind()
+{
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+}

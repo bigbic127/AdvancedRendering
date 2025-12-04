@@ -9,6 +9,7 @@ class ITexture
         virtual void Bind() = 0;
         virtual void UnBind() = 0;
         virtual unsigned int GetID() const = 0;
+        virtual unsigned int GetImageID() const = 0;
 };
 
 class OpenGLTexture:public ITexture
@@ -21,8 +22,10 @@ class OpenGLTexture:public ITexture
         void Bind() override;
         void UnBind() override;
         unsigned int GetID() const override {return textureID;}
+        unsigned int GetImageID() const override {return imageID;}
+
     private:
-        unsigned int textureID;
+        unsigned int textureID, imageID;
         int width, height, nrChannels;
 };
 
@@ -33,9 +36,25 @@ class OpenGLCubeTexture:public ITexture
         ~OpenGLCubeTexture();
         void Bind() override;
         void UnBind() override;
-        unsigned int GetID()const override {return imageID;}
+        unsigned int GetID()const override {return textureID;}
+        unsigned int GetImageID()const override {return imageID;}
     private:
         void CreateImageTexture();
         unsigned int textureID, imageID;
+        int width, height, nrChannels;
+};
+
+class OpenGLHDRTexture:public ITexture
+{
+    public:
+        OpenGLHDRTexture(const std::string& path);
+        unsigned int GetID()const override{return textureID;}
+        unsigned int GetImageID()const override{return imageID;}
+        unsigned int GetIlluminance()const{return illuminanceID;}
+        void Bind() override;
+        void UnBind() override;
+    private:
+        void CreateCubeTexture();
+        unsigned int textureID, imageID, illuminanceID;
         int width, height, nrChannels;
 };
