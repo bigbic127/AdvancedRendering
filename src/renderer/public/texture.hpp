@@ -51,10 +51,12 @@ class OpenGLHDRTexture:public ITexture
         unsigned int GetID()const override{return textureID;}
         unsigned int GetImageID()const override{return imageID;}
         unsigned int GetIlluminance()const{return illuminanceID;}
+        unsigned int GetPrefilter()const{return prefilterID;}
+        unsigned int GetBRDRLUT()const{return brdfLUTID;}
         void Bind() override;
         void UnBind() override;
     private:
         void CreateCubeTexture();
-        unsigned int textureID, imageID, illuminanceID;
+        unsigned int textureID, imageID, illuminanceID, prefilterID, brdfLUTID;
         int width, height, nrChannels;
 };

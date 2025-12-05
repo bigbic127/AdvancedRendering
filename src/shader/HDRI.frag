@@ -1,6 +1,6 @@
 #version 430 core
 out vec4 FragColor;
-in vec3 fragTexcoord;
+in vec3 fragPos;
 
 uniform sampler2D hdrTexture;
 //const float PI = 3.14159265359;
@@ -20,7 +20,7 @@ vec2 SampleSphericalMap(vec3 v)
 void main()
 {
     //HDRI Texture
-    vec2 uv = SampleSphericalMap(normalize(fragTexcoord));
+    vec2 uv = SampleSphericalMap(normalize(fragPos));
     vec3 color = texture(hdrTexture, uv).rgb;
     //color = pow(color, vec3(2.2f));
     FragColor = vec4(color, 1.0f);

@@ -66,6 +66,9 @@ uniform int shader = 0;
 // 0:Plastic 1:Transparent
 uniform int type = 0;
 
+const float PI = 3.14159265359;
+
+
 float LinearizeDepth(float depth) 
 {
     float z = depth * 2.0 - 1.0;
@@ -155,11 +158,11 @@ void main()
     float lightValue = max(dot(normal, lightDir),0.0f);
     //specular
     float reflectValue = 0.0f;
-    if(shader == 0)//blinn
+    if(shader == 1)//phong
     {
         vec3 halfwayDir = normalize(lightDir + viewDir); 
         reflectValue = pow(max(dot(normal, halfwayDir),0.0f), specularShininess);
-    }else
+    }else//bilnn
     {
         vec3 reflectDir = reflect(-lightDir, normal);
         reflectValue = pow(max(dot(viewDir, reflectDir),0.0f), specularShininess);
@@ -193,9 +196,10 @@ void main()
         skyboxColor = texture(skyboxTexture, R).rgb;
     }
     //result
+    float _lightIntensity = (lightIntensity/4*PI) * (dot(normal, lightDir)/10.0f);
     vec3 ambient =  lightColor * ambientColor * diffuseColor.xyz * diffuseTextureColor + lightAmbient;
-    vec3 diffuse = lightIntensity * lightValue * lightColor * diffuseColor.xyz * diffuseTextureColor;
-    vec3 specular = reflectValue * lightIntensity * lightColor * specularColor;
+    vec3 diffuse = _lightIntensity * lightValue * lightColor * diffuseColor.xyz * diffuseTextureColor;
+    vec3 specular = reflectValue * _lightIntensity * lightColor * specularColor;
     if(bRoughness)
     {
         float specularvalue = texture(roughnessTexture, fragTexcoord).r;

@@ -28,4 +28,8 @@
 
 [스크린샷폴더로 이동](screenshot)
 
+
+![alt text](screenshot/014_SpecularIBL.png)
+
+
 ![alt text](screenshot/imageF.png)

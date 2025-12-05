@@ -36,9 +36,10 @@ void main()
     vec3 normal = normalize(inFrag.FragNor);
     float occlusion = 1.0f;
     float metallic = 1.0f;
+    float scaleUV = 1.0f;
     if(bDiffuse)
     {
-        diffuse = texture(diffuseTexture, inFrag.FragTexcoord).rgb;
+        diffuse = texture(diffuseTexture, inFrag.FragTexcoord * scaleUV).rgb;
         diffuse = pow(diffuse, vec3(2.2));
     }
     if(bRoughness)
@@ -47,8 +48,9 @@ void main()
         metallic = texture(metallicTexture, inFrag.FragTexcoord).r;
     if(bNormal)
     {
-        normal = texture(normalTexture, inFrag.FragTexcoord).rgb;
+        normal = texture(normalTexture, inFrag.FragTexcoord * scaleUV).rgb;
         normal = normal * 2.0f - 1.0f;
+        normal.xy *= 1.0f;// strength
         normal = normalize(inFrag.TBN * normal);
     }
     if(bAo)

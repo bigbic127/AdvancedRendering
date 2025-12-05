@@ -75,6 +75,16 @@ ResourceManager::ResourceManager()
     const std::string illuminancefsPath = "/shader/HDRIilluminance.frag";
     auto illuminanceShader = std::make_unique<OpenGLShader>(illuminancevsPath, illuminancefsPath);
     shaders.emplace("illuminanceShader", std::move(illuminanceShader));
+    //create HDRI prefilter shader
+    const std::string prefiltervsPath = "/shader/HDRIprefilter.vert";
+    const std::string prefilterfsPath = "/shader/HDRIprefilter.frag";
+    auto prefilterShader = std::make_unique<OpenGLShader>(prefiltervsPath, prefilterfsPath);
+    shaders.emplace("prefilterShader", std::move(prefilterShader));
+    //create HDRI BRDF LUT shader
+    const std::string brdfLUTvsPath = "/shader/HDRIbrdfLUT.vert";
+    const std::string brdfLUTfsPath = "/shader/HDRIbrdfLUT.frag";
+    auto brdfLUTShader = std::make_unique<OpenGLShader>(brdfLUTvsPath, brdfLUTfsPath);
+    shaders.emplace("brdfLUTShader", std::move(brdfLUTShader));
     //create skybox shader
     const std::string skyboxvsPath = "/shader/skybox.vert";
     const std::string skyboxfsPath = "/shader/skybox.frag";

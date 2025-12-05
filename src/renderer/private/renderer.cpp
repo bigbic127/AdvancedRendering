@@ -32,6 +32,7 @@ OpenGLRenderer::OpenGLRenderer()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     CreateBuffer(800, 600);
     //create ssao
     std::uniform_real_distribution<GLfloat> randomFloats(0.0f, 1.0f);
@@ -347,7 +348,6 @@ void OpenGLRenderer::Begin()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, hdriTexture->GetImageID());
     glViewport(0, 0, 512, 512);
-    glDepthFunc(GL_LEQUAL);
     glCullFace(GL_FRONT);
     glHDRShader->SetMatrix4("mProjection", captureProjection);
     for(unsigned i=0;i<6;++i)
@@ -370,20 +370,19 @@ void OpenGLRenderer::Begin()
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
     IShader* illuminanceShader = Context::GetContext()->resourceManager->FindShader("illuminanceShader");
     OpenGLShader* glIlluminanceShader = static_cast<OpenGLShader*>(illuminanceShader);
-    OpenGLHDRTexture* illuminanceTexture = static_cast<OpenGLHDRTexture*>(hdriTexture);
+    OpenGLHDRTexture* glHDRITexture = static_cast<OpenGLHDRTexture*>(hdriTexture);
     glIlluminanceShader->UseProgram();
     glIlluminanceShader->SetInt("environmentMap", 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, hdriTexture->GetID());
+    glBindTexture(GL_TEXTURE_CUBE_MAP, glHDRITexture->GetID());
     glViewport(0, 0, 32, 32);
-    glDepthFunc(GL_LEQUAL);
     glCullFace(GL_FRONT);
     glIlluminanceShader->SetMatrix4("mProjection", captureProjection);
     for(unsigned i=0;i<6;++i)
     {
         glIlluminanceShader->SetMatrix4("mView", captureViews[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, illuminanceTexture->GetIlluminance(), 0);
+                                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, glHDRITexture->GetIlluminance(), 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         skyboxMesh->Bind();
         skyboxMesh->Draw();
@@ -393,8 +392,55 @@ void OpenGLRenderer::Begin()
     glIlluminanceShader->EndProgam();
     glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDepthFunc(GL_LESS);
-}
+    //prefilterMap
+    IShader* prefilterShader = Context::GetContext()->resourceManager->FindShader("prefilterShader");
+    OpenGLShader* glPrefilterShader = static_cast<OpenGLShader*>(prefilterShader);
+    glPrefilterShader->UseProgram();
+    glPrefilterShader->SetInt("environmentMap", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, glHDRITexture->GetID());
+    glCullFace(GL_FRONT);
+    glPrefilterShader->SetMatrix4("mProjection", captureProjection);    
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    unsigned int maxMipLevels = 5;
+    for(unsigned int mip=0; mip<maxMipLevels; ++mip)
+    {
+        unsigned int mipWidth = static_cast<unsigned int>(128*glm::pow(0.5, mip));
+        unsigned int mipHeight = static_cast<unsigned int>(128*glm::pow(0.5, mip));
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+        glViewport(0,0,mipWidth, mipHeight);
+        float roughness = (float)mip/(float)(maxMipLevels -1);
+        glPrefilterShader->SetFloat("roughness", roughness);
+        for(unsigned i=0;i<6;++i)
+        {
+            glIlluminanceShader->SetMatrix4("mView", captureViews[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, glHDRITexture->GetPrefilter(), mip);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            skyboxMesh->Bind();
+            skyboxMesh->Draw();
+            skyboxMesh->UnBind();            
+        }
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glPrefilterShader->EndProgam();
+    glCullFace(GL_BACK);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //BRDF LUT
+    IShader* brdfLUTShader = Context::GetContext()->resourceManager->FindShader("brdfLUTShader");
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, glHDRITexture->GetBRDRLUT(), 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, 512, 512);
+    brdfLUTShader->UseProgram();
+    rendererMesh->Bind();
+    rendererMesh->Draw();
+    rendererMesh->UnBind();
+    brdfLUTShader->EndProgam();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);}
 
 void OpenGLRenderer::Draw()
 {
@@ -453,6 +499,7 @@ void OpenGLRenderer::Draw()
         glViewport(0,0,width,height);
         glBindFramebuffer(GL_FRAMEBUFFER, gfbo);
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_STENCIL_TEST);
         Clear();
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         OpenGLShader* gbufferShader = static_cast<OpenGLShader*>(Context::GetContext()->resourceManager->FindShader("gbufferShader"));
@@ -507,7 +554,7 @@ void OpenGLRenderer::Draw()
             {
                 gbufferShader->SetBool("bRoughness", true);
                 gbufferShader->SetInt("roughnessTexture", index);
-                parameter->roughnessFactor = 1.0f;
+                //parameter->roughnessFactor = 1.0f;
                 glActiveTexture(GL_TEXTURE0+index);
                 parameter->roughnessTextrue->Bind();
                 index++;
@@ -516,7 +563,7 @@ void OpenGLRenderer::Draw()
             {
                 gbufferShader->SetBool("bMetallic", true);
                 gbufferShader->SetInt("metallicTexture", index);
-                parameter->metallicFactor = 1.0f;
+                //parameter->metallicFactor = 1.0f;
                 glActiveTexture(GL_TEXTURE0+index);
                 parameter->metallicTexture->Bind();
                 index++;
@@ -673,17 +720,30 @@ void OpenGLRenderer::Draw()
         index++;
         deferredShader->SetInt("illuminanceMap", index);
         glActiveTexture(GL_TEXTURE0+index);
-        lightComponent->GetHDRITexture()->Bind();
+        OpenGLHDRTexture* hdriTexture = static_cast<OpenGLHDRTexture*>(lightComponent->GetHDRITexture());
+        glBindTexture(GL_TEXTURE_CUBE_MAP, hdriTexture->GetIlluminance());
+        index++;
+        deferredShader->SetInt("prefilterMap", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, hdriTexture->GetPrefilter());
+        index++;
+        deferredShader->SetInt("brdfLUT", index);
+        glActiveTexture(GL_TEXTURE0+index);
+        glBindTexture(GL_TEXTURE_2D, hdriTexture->GetBRDRLUT());
         //mesh
         rendererMesh->Bind();
         rendererMesh->Draw();
         rendererMesh->UnBind();
         deferredShader->EndProgam();
         glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
         //skybox forward
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
+        glStencilMask(0x00);
         lightComponent->Draw();
+        glDepthFunc(GL_LESS);
         //stencilRender forward
         if (Context::GetContext()->world->GetSelectedActor() != nullptr && bStencil)
         {

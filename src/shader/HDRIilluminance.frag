@@ -1,13 +1,13 @@
 #version 430 core
 out vec4 FragColor;
-in vec3 fragTexcoord;
+in vec3 fragPos;
 
 uniform samplerCube environmentMap;
 const float PI = 3.14159265359;
 
 void main()
 {
-    vec3 N = normalize(fragTexcoord);
+    vec3 N = normalize(fragPos);
 
     vec3 irradiance = vec3(0.0);   
     

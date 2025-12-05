@@ -11,6 +11,8 @@ uniform sampler2D gORMI;
 uniform sampler2D occlusionTexture;         
 uniform sampler2D shadowmapTexture;
 uniform samplerCube illuminanceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D brdfLUT;
 
 uniform vec3 directionalLight;
 uniform vec3 cameraPosition;
@@ -70,6 +72,11 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+} 
 
 float CaculationShadow(vec3 position, float bias=0.005f)
 {
@@ -131,25 +138,45 @@ void main()
         float IOR = 1.5f;//Index Of Reflection
         vec3 F0 = vec3(pow((IOR-1)/(IOR+1), 2));//Fresnel equation | 각도에 따른 반사율 
         F0 = mix(F0, albedo, metallic);
-        vec3 radiance = lightIntensity * lightColor;
 
-        float D = DistributionGGX(normal, halfwayDir, roughness);
-        float G   = GeometrySmith(normal, viewDir, lightDir, roughness);
-        vec3  F   = FresnelSchlick(max(dot(halfwayDir, viewDir), 0.0), F0);
+        vec3 reflectDir = reflect(-viewDir, normal);
+        {
+            //point, spot, area light 
+            //float distance = length(lightPosition, worldPos);
+            //float attenuation = 1.0 / (distance * distance);
 
-        vec3 numerator = D * G * F; 
-        float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
-        vec3 specular = numerator / denominator;
+            //all luminance
+            vec3 radiance = lightIntensity * lightColor;
+
+            //cook-torrance BRDF
+            float D = DistributionGGX(normal, halfwayDir, roughness);
+            float G   = GeometrySmith(normal, viewDir, lightDir, roughness);
+            vec3  F   = FresnelSchlick(max(dot(halfwayDir, viewDir), 0.0), F0);
+
+            vec3 numerator = D * G * F; 
+            float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
+            vec3 specular = numerator / denominator;
+            vec3 kS = F;
+            vec3 kD = vec3(1.0) - kS;
+            kD *= 1.0 - metallic;
+            float NdotL = max(dot(normal, lightDir), 0.0);
+            Lo += (kD * albedo / PI + specular) * radiance * NdotL * (1.0f - shadow); 
+        }
+        // ambient
+        vec3 F = fresnelSchlickRoughness(max(dot(normal, viewDir), 0.0), F0, roughness);
         vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
+        vec3 kD = 1.0 - kS;
         kD *= 1.0 - metallic;
-        float NdotL = max(dot(normal, lightDir), 0.0);
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL * (1.0f - shadow); 
-        
         vec3 illuminance = texture(illuminanceMap, normal).rgb;
-        vec3 diffuse = illuminance * albedo * kD;
+        vec3 diffuse = illuminance * albedo;
+        
+        //specular
+        const float MAX_REFLECTION_LOD = 4.0;
+        vec3 prefilteredColor = textureLod(prefilterMap, reflectDir, roughness * MAX_REFLECTION_LOD).rgb;
+        vec2 brdf = texture(brdfLUT, vec2(max(dot(normal, viewDir), 0.0), roughness)).rg;
+        vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-        vec3 ambient = occlusion * diffuse * lightAmbient;
+        vec3 ambient = occlusion * (kD * diffuse + specular) + lightAmbient;
         vec3 color = ambient + Lo;
         FragColor = vec4(color, 1.0);
     }
